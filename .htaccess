@@ -1,0 +1,56 @@
+# =====================================================================
+# First UMC & Wesley Foundation — Apache configuration
+# =====================================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # ---- Tidy URL for the CMS: /admin instead of /admin.html ----------
+    #
+    # Anyone who lands on the old address, or adds a trailing slash, is
+    # sent to /admin so there is only ever one address to bookmark.
+    # (The trailing slash matters: without this, relative links inside
+    # the page would look for /admin/api.php instead of /api.php.)
+    RewriteCond %{THE_REQUEST} \s/+admin\.html[\s?] [NC]
+    RewriteRule ^ /admin [R=301,L]
+
+    RewriteRule ^admin/$ /admin [R=301,L]
+
+    # Serve the CMS at /admin without changing the address bar.
+    RewriteRule ^admin$ admin.html [L]
+</IfModule>
+
+# ---- Keep private files private ---------------------------------------
+# If PHP is ever misconfigured or switched off, these must not be
+# downloadable as plain text: config.php holds the admin password.
+<FilesMatch "^(config\.php|config\.sample\.php|mailer\.php)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Never serve the repository metadata if the site is deployed with git.
+RedirectMatch 404 /\.git
+
+# ---- Small niceties ---------------------------------------------------
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header always append X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg  "access plus 1 month"
+    ExpiresByType image/png   "access plus 1 month"
+    ExpiresByType image/webp  "access plus 1 month"
+    ExpiresByType image/gif   "access plus 1 month"
+    # The site and CMS must always be fresh, so they are left uncached.
+</IfModule>

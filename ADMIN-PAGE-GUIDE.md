@@ -2,7 +2,7 @@
 
 Everything on the website is edited from one place: the **Website Manager**.
 
-Go to **`yourdomain.com/admin.html`** and sign in with your password.
+Go to **`yourdomain.com/admin`** and sign in with your password.
 (There's also a small *Site admin* link at the very bottom of the website.)
 
 Bookmark that address — it's the only page you need.

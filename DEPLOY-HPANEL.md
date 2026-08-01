@@ -9,7 +9,8 @@ device. There is no database server to set up.
 | File | What it is |
 |------|-----------|
 | `index.html` | The public website. |
-| `admin.html` | The **Website Manager** (the CMS). Visit `/admin.html` to sign in. |
+| `admin.html` | The **Website Manager** (the CMS). Visit **`/admin`** to sign in. |
+| `.htaccess` | Apache settings — this is what makes `/admin` work. Hidden file; make sure it uploads. |
 | `content.js` | The shared content model used by both pages. Don't edit by hand. |
 | `api.php` | The backend (content, messages, uploads, revisions). |
 | `mailer.php` | Sends the contact form emails. |
@@ -44,7 +45,7 @@ define('WESLEY_ADMIN_PASSWORD', 'change-this-password');          // <- your adm
 define('WESLEY_SECRET', 'change-this-to-a-long-random-string');  // <- any long random text
 ```
 
-- **WESLEY_ADMIN_PASSWORD** — what admins type at `/admin.html`.
+- **WESLEY_ADMIN_PASSWORD** — what admins type at `/admin`.
   (It can also be changed later inside the CMS, under Settings.)
 - **WESLEY_SECRET** — secures sign-ins. Change it to your own long random text (mash
   the keyboard). Changing it later just signs editors out.
@@ -73,6 +74,7 @@ so the structure looks like this:
 
 ```
 public_html/
+├── .htaccess           <- hidden; makes /admin work
 ├── index.html
 ├── admin.html
 ├── content.js
@@ -88,9 +90,12 @@ public_html/
 Tips:
 - Easiest way: zip the project, **Upload**, then **Extract** in File Manager.
 - All the files must sit in the **same folder**.
-- Make sure the hidden `.htaccess` files came along — turn on "show hidden files" in
-  File Manager if you don't see them. They matter: they stop visitors downloading your
-  database or running anything uploaded.
+- Make sure all three hidden `.htaccess` files came along — turn on "show hidden files"
+  in File Manager if you don't see them. They matter: they give you the `/admin`
+  address, and they stop visitors downloading your database or running anything
+  uploaded.
+- `router.php` is only for running the site on a laptop. You don't need to upload it
+  (it does no harm if you do).
 
 ---
 
@@ -105,7 +110,7 @@ Manager right-click each folder → **Permissions** → set to **755** (or 775).
 ## Step 4 — Check it works
 
 1. Visit your domain — the website should appear.
-2. Visit `yourdomain.com/admin.html` and sign in.
+2. Visit `yourdomain.com/admin` and sign in.
 3. Go to **Settings → Send a test email**. Check the inbox of
    `odanladi@icfirstchurch.org` **and its spam folder**.
 4. Change something small and press **Publish changes**, then reload the website.

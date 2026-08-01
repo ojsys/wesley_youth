@@ -13,7 +13,7 @@ the back — it runs on ordinary shared hosting.
 | | |
 |---|---|
 | **The website** | `index.html` — one page: hero, vision & mission, impact areas, gatherings, photo gallery, contact. |
-| **The CMS** | `admin.html` — sign in at `/admin.html` to edit every word and photo on the site. |
+| **The CMS** | `admin.html` — sign in at **`/admin`** to edit every word and photo on the site. |
 | **The backend** | `api.php` — content, contact form, media uploads, revisions. |
 
 ### The CMS
@@ -40,11 +40,15 @@ You need PHP 7.4+ with PDO SQLite (bundled with PHP on macOS and most Linux dist
 
 ```bash
 cp config.sample.php config.php     # then edit it — set a password
-php -S 127.0.0.1:8000
+php -S 127.0.0.1:8000 router.php
 ```
 
 - Website → <http://127.0.0.1:8000/index.html>
-- CMS → <http://127.0.0.1:8000/admin.html>
+- CMS → <http://127.0.0.1:8000/admin>
+
+`router.php` exists only for this: PHP's built-in server ignores `.htaccess`, so it
+stands in for the one rewrite the live site uses (serving the CMS at `/admin`). Apache
+handles that in production, so `router.php` is never used there.
 
 `data/content.db` is created on first use. Delete it to reset the site to the built-in
 default content in `content.js`.
@@ -62,7 +66,7 @@ Hostinger hPanel, but it applies to any PHP host). The short version:
 2. Upload everything to `public_html`, keeping the hidden `.htaccess` files in `data/`
    and `uploads/`.
 3. Make `data/` and `uploads/` writable (755).
-4. Sign in at `/admin.html` and send a test email from Settings.
+4. Sign in at `/admin` and send a test email from Settings.
 
 ---
 
