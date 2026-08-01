@@ -6,7 +6,9 @@
    if the site already had content saved in data/content.db.
 
      From a terminal:   php migrate.php
-     Or in a browser:   https://yourdomain.com/migrate.php?key=YOUR_SECRET
+     Or in a browser:   https://yourdomain.com/migrate.php
+                        (it will ask you to confirm with a one-time code
+                         it writes into data/migrate-key.txt)
 
    It copies content, revisions, messages, settings and media records
    across. Running it twice is safe -- it never duplicates rows, and by
@@ -21,20 +23,83 @@ require __DIR__ . '/db.php';
 
 $cli = (php_sapi_name() === 'cli');
 
-/* ---- Only the site owner may run this ---- */
-if (!$cli) {
-    header('Content-Type: text/plain; charset=utf-8');
-    $key = isset($_GET['key']) ? (string)$_GET['key'] : '';
-    if (!hash_equals(WESLEY_SECRET, $key)) {
-        http_response_code(403);
-        exit("Forbidden.\n\nAdd ?key=<the WESLEY_SECRET value from config.php> to the address.\n");
-    }
-}
-$force = $cli
-    ? in_array('--force', $argv, true)
-    : !empty($_GET['force']);
+/* ---------------------------------------------------------------------
+   Proving you are the site owner.
 
-function say($line) { echo $line . "\n"; }
+   From a terminal there is nothing to prove -- you already have shell
+   access. In a browser, this script writes a one-time code into
+   data/migrate-key.txt and asks you to paste it back. Reading that file
+   needs File Manager or FTP, which only the owner has, and the folder's
+   .htaccess stops anyone fetching it over the web.
+
+   The code is sent as a form POST, never in the address bar, so it stays
+   out of server logs and browser history. WESLEY_SECRET is deliberately
+   NOT used here: it signs admin sign-in tokens, and anything that ends up
+   in a URL ends up in a log file.
+   --------------------------------------------------------------------- */
+function migrate_key_path(): string { return dirname(WESLEY_DB) . '/migrate-key.txt'; }
+
+function migrate_key_issue(): ?string {
+    $dir = dirname(migrate_key_path());
+    if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
+    $key = bin2hex(random_bytes(8));
+    if (@file_put_contents(migrate_key_path(), $key . "\n") === false) return null;
+    @chmod(migrate_key_path(), 0600);
+    return $key;
+}
+
+function migrate_page(string $title, string $bodyHtml): void {
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+       . '<title>' . htmlspecialchars($title) . '</title>'
+       . '<style>body{font-family:system-ui,sans-serif;max-width:38rem;margin:3rem auto;padding:0 1.2rem;'
+       . 'line-height:1.6;color:#201C17}h1{font-size:1.3rem}code{background:#F3F0E8;padding:.1rem .3rem;'
+       . 'border-radius:4px}input[type=text]{width:100%;padding:.6rem;font-size:1rem;border:1px solid #ccc;'
+       . 'border-radius:8px}button{margin-top:.8rem;padding:.7rem 1.2rem;font-size:1rem;border:0;'
+       . 'border-radius:8px;background:#141210;color:#FBCB2E;cursor:pointer}pre{background:#F3F0E8;'
+       . 'padding:1rem;border-radius:8px;white-space:pre-wrap}.warn{color:#C0392B}</style>'
+       . '<h1>' . htmlspecialchars($title) . '</h1>' . $bodyHtml;
+    exit;
+}
+
+$force = false;
+
+if ($cli) {
+    $force = in_array('--force', $argv, true);
+} else {
+    $given = isset($_POST['key']) ? (string)$_POST['key'] : '';
+    $onFile = is_readable(migrate_key_path()) ? trim((string)file_get_contents(migrate_key_path())) : '';
+
+    if ($given === '' || $onFile === '' || !hash_equals($onFile, $given)) {
+        $key = migrate_key_issue();
+        if ($key === null) {
+            migrate_page('Cannot start the migration',
+                '<p class="warn">The <code>data/</code> folder is not writable, so this page cannot issue a '
+              . 'one-time code.</p><p>Either set that folder to <strong>755</strong> in File Manager and reload, '
+              . 'or run the migration from cPanel &rarr; <strong>Terminal</strong> instead:</p>'
+              . '<pre>cd ~/public_html &amp;&amp; php migrate.php</pre>');
+        }
+        migrate_page('Confirm the migration',
+            '<p>To prove you own this site, open this file using cPanel&rsquo;s <strong>File Manager</strong> '
+          . '(or FTP) and copy the short code inside it:</p>'
+          . '<pre>' . htmlspecialchars(migrate_key_path()) . '</pre>'
+          . ($given !== '' ? '<p class="warn">That code did not match. A fresh one has just been written &mdash; '
+                             . 'reopen the file.</p>' : '')
+          . '<form method="post"><label for="k">Paste the code</label>'
+          . '<input type="text" id="k" name="key" autocomplete="off" spellcheck="false">'
+          . '<label style="display:block;margin-top:.9rem"><input type="checkbox" name="force" value="1"> '
+          . 'Overwrite content already in the MySQL database</label>'
+          . '<button type="submit">Run the migration</button></form>'
+          . '<p style="color:#7A7263;font-size:.9rem">Nothing has been changed yet. '
+          . 'Delete <code>migrate.php</code> from the server when you are done.</p>');
+    }
+
+    $force = !empty($_POST['force']);
+    header('Content-Type: text/plain; charset=utf-8');
+    @unlink(migrate_key_path());   // the code is good for one run only
+}
+
+function say(string $line): void { echo $line . "\n"; }
 
 /* ---- Checks ---- */
 if (wesley_db_driver() !== 'mysql') {
@@ -61,7 +126,7 @@ try {
 }
 
 /* Does the old file actually have a given table? */
-function has_table(PDO $pdo, $name) {
+function has_table(PDO $pdo, string $name): bool {
     $st = $pdo->prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name = :n");
     $st->execute([':n' => $name]);
     return (bool)$st->fetchColumn();

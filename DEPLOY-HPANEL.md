@@ -146,21 +146,30 @@ MySQL.
 
 ## Step 3b — Only if the site already had content
 
-Skip this on a fresh install.
+**Skip this entirely on a fresh install** — if there is no old `data/content.db` with
+pages and messages in it, there is nothing to migrate. Just delete `migrate.php` from
+the server.
 
-If the site was previously running on the SQLite version and you have an existing
-`data/content.db` full of pages and messages, move it into MySQL once:
+If the site *was* previously running the SQLite version, move that content into MySQL
+once. From cPanel → **Terminal** (or SSH):
 
 ```bash
-php migrate.php
+cd ~/public_html && php migrate.php
 ```
 
-No SSH? Visit `https://yourdomain.com/migrate.php?key=YOUR_SECRET`, where `YOUR_SECRET`
-is the `WESLEY_SECRET` value from `config.php` — nobody without it can run the script.
+No terminal on your plan? Open `https://yourdomain.com/migrate.php` in a browser. It
+will ask you to confirm you own the site:
+
+1. It writes a short one-time code into `data/migrate-key.txt`.
+2. Open that file in **File Manager** and copy the code.
+3. Paste it into the page and press **Run the migration**.
+
+That proves you have File Manager access, which only you do. The code works once and is
+deleted afterwards.
 
 It copies content, revisions, messages, settings (including your changed password) and
 photo records across. It refuses to overwrite a MySQL database that already has content
-unless you add `--force` (or `&force=1`).
+unless you tick the overwrite box (or pass `--force` on the command line).
 
 **Then delete `migrate.php` from the server.**
 
