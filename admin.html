@@ -237,9 +237,15 @@
             border: 1px solid var(--line); border-radius: 11px; overflow: hidden; background: var(--paper);
             cursor: pointer; position: relative;
         }
-        .media-tile img { width: 100%; height: 118px; object-fit: cover; display: block; background: #EDE8DA; }
+        .media-tile img { width: 100%; height: 118px; object-fit: cover; display: block; background: #EDE8DA; cursor: copy; }
         .media-tile .meta { padding: 0.45rem 0.55rem; font-size: 0.72rem; color: var(--muted); word-break: break-all; }
         .media-tile:hover { border-color: var(--gold-deep); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+        .media-in {
+            width: 100%; margin-bottom: 0.3rem; padding: 0.3rem 0.4rem; font-family: inherit;
+            font-size: 0.76rem; border: 1px solid var(--line); border-radius: 6px; background: #FCFBF7; color: var(--text);
+        }
+        .media-in:focus { outline: none; border-color: var(--gold-deep); box-shadow: 0 0 0 2px rgba(242,183,5,0.2); }
+        .media-facts { display: block; font-size: 0.7rem; color: var(--muted); }
         .media-tile .del {
             position: absolute; top: 6px; right: 6px; background: rgba(255,255,255,0.92);
             border: 1px solid var(--line); border-radius: 7px; width: 26px; height: 26px; cursor: pointer;
@@ -1067,12 +1073,23 @@ function scMedia() {
         '</div>' +
         (media.length
             ? '<div class="media-grid">' + media.map(function (m) {
-                return '<div class="media-tile" data-copy="' + esc(m.url) + '" title="Click to copy the link">' +
+                return '<div class="media-tile">' +
                     '<button class="del" data-media-del="' + esc(m.name) + '"><i class="fas fa-trash"></i></button>' +
-                    '<img src="' + esc(m.url) + '" alt="" loading="lazy">' +
-                    '<div class="meta">' + esc(m.name) + '<br>' + bytes(m.size) + '</div></div>';
+                    '<img src="' + esc(m.url) + '" alt="' + esc(m.alt_text) + '" loading="lazy" ' +
+                         'data-copy="' + esc(m.url) + '" title="Click to copy the link">' +
+                    '<div class="meta">' +
+                        '<input type="text" class="media-in" data-media-field="alt_text:' + m.id + '" ' +
+                            'value="' + esc(m.alt_text) + '" placeholder="Alt text — describe the photo">' +
+                        '<input type="text" class="media-in" data-media-field="caption:' + m.id + '" ' +
+                            'value="' + esc(m.caption) + '" placeholder="Caption">' +
+                        '<span class="media-facts">' + esc(m.width) + '×' + esc(m.height) + ' · ' + bytes(m.size) + '</span>' +
+                    '</div></div>';
               }).join('') + '</div>'
             : '<p class="empty">No photos uploaded yet.</p>') +
+        '<p style="color:var(--muted);font-size:0.85rem;margin-top:1rem">' +
+            '<strong>Alt text</strong> describes the photo for visitors who use a screen reader, and shows if the ' +
+            'image fails to load. <strong>Caption</strong> is suggested text when you add the photo to the gallery. ' +
+            'Both save as soon as you click away.</p>' +
     '</div>';
 }
 
@@ -1138,6 +1155,14 @@ function scSettings() {
                 ? 'You are using a password set here in the CMS.'
                 : 'You are still using the starter password from <code>config.php</code> — please change it.') + '</p>' +
     '</div>' +
+    '<div class="card"><h3><i class="fas fa-database"></i> Storage</h3>' +
+        '<p style="font-size:0.92rem;color:var(--muted)">' +
+            (stats.driver === 'mysql'
+                ? 'Content, messages and photo records are stored in your <strong>MySQL database</strong>, so they are included in your hosting account\'s backups and can be inspected in phpMyAdmin.'
+                : 'Content is stored in a <strong>SQLite file</strong> (<code>data/content.db</code>). That works, but on real hosting a MySQL database is safer — see <code>DEPLOY-HPANEL.md</code>.') +
+            ' Photos themselves stay as files in <code>uploads/</code>.' +
+        '</p>' +
+    '</div>' +
     '<div class="card"><h3><i class="fas fa-circle-info"></i> About</h3>' +
         '<p style="font-size:0.92rem;color:var(--muted)">This manager edits the live website directly. Changes are only visible to visitors after you press <strong>Publish changes</strong>. ' +
         'Bookmark this page: <code>' + esc(location.href.split('#')[0]) + '</code></p>' +
@@ -1183,6 +1208,21 @@ main.addEventListener('input', function (e) {
     if (itemTitle && /\.(title|label)$/.test(path)) {
         itemTitle.querySelector('.item-head .title').textContent = el.value || 'Untitled';
     }
+});
+
+// Media library alt text / caption: these describe the photo itself, not the
+// page, so they save straight away rather than waiting for Publish.
+main.addEventListener('change', function (e) {
+    var f = e.target.closest('[data-media-field]');
+    if (!f) return;
+    var parts = f.dataset.mediaField.split(':');
+    var id = Number(parts[1]);
+    var row = media.filter(function (m) { return m.id === id; })[0];
+    if (!row) return;
+    row[parts[0]] = f.value;
+    api('media_update', { id: id, alt_text: row.alt_text || '', caption: row.caption || '' })
+        .then(function () { toast('Saved.'); })
+        .catch(function (err) { toast(err.message, true); });
 });
 
 main.addEventListener('change', function (e) {
@@ -1329,10 +1369,19 @@ $('pickGrid').addEventListener('click', function (e) {
     chooseImage(tile.dataset.choose);
 });
 function chooseImage(url) {
+    // Reuse whatever was written about this photo in the media library.
+    var row = media.filter(function (m) { return m.url === url; })[0] || {};
     if (pickTarget === '__gallery_bulk__') {
-        content.gallery.items.push({ image: url, title: '', desc: '' });
+        content.gallery.items.push({ image: url, title: row.caption || '', desc: row.alt_text || '' });
     } else {
         setPath(pickTarget, url);
+        // Filling an empty gallery photo? Bring its words along too.
+        var m = /^gallery\.items\.(\d+)\.image$/.exec(pickTarget);
+        if (m) {
+            var item = content.gallery.items[Number(m[1])];
+            if (item && !item.title && row.caption)  item.title = row.caption;
+            if (item && !item.desc  && row.alt_text) item.desc  = row.alt_text;
+        }
     }
     markDirty();
     closeModals();

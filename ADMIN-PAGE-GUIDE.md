@@ -79,6 +79,19 @@ then on. JPG, PNG, GIF and WEBP up to 8 MB each.
 To add several gallery photos at once, go to **Photo Gallery → Upload several at
 once**, then fill in the titles and captions afterwards.
 
+### Describing your photos
+
+In **Media Library** each photo has two boxes under it:
+
+- **Alt text** — a short description of what's in the picture, like *"Students sharing
+  a meal together"*. Visitors who use a screen reader hear this instead of seeing the
+  photo, and it shows if the image ever fails to load. It also helps Google.
+- **Caption** — the words you'd normally put with the photo.
+
+Both save the moment you click away — they describe the photo itself, so they don't
+wait for **Publish changes**. Once filled in, they're offered automatically as the
+title and caption whenever you add that photo to the gallery.
+
 ### The top of the page
 
 The rotating photo slideshow has been removed — it was distracting. The top of the

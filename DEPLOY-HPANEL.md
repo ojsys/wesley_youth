@@ -1,8 +1,12 @@
 # Deploying the site to Hostinger (hPanel)
 
-The website is a small **PHP + SQLite** application. Content is edited in a proper
-admin panel (`admin.html`), stored on the server, and shown to every visitor on every
-device. There is no database server to set up.
+The website is a small **PHP + MySQL** application. Content is edited in a proper admin
+panel at `/admin`, stored in your hosting account's database, and shown to every
+visitor on every device.
+
+Photos are kept as ordinary files in `uploads/`, with a record of each one in the
+database (dimensions, alt text, caption). That is how WordPress does it, and it keeps
+pages fast — images are served straight by the web server and cached by browsers.
 
 ## Files in this project
 
@@ -13,10 +17,12 @@ device. There is no database server to set up.
 | `.htaccess` | Apache settings — this is what makes `/admin` work. Hidden file; make sure it uploads. |
 | `content.js` | The shared content model used by both pages. Don't edit by hand. |
 | `api.php` | The backend (content, messages, uploads, revisions). |
+| `db.php` | Talks to the database. Creates the tables on first use. |
 | `mailer.php` | Sends the contact form emails. |
+| `migrate.php` | One-time move of old SQLite content into MySQL. Delete it afterwards. |
 | `config.sample.php` | The template for the settings file. |
 | `config.php` | Your password and email settings. **Create and edit before uploading** (see Step 1). Never share it or commit it to GitHub. |
-| `data/` | The SQLite database (`content.db`, created automatically) + an `.htaccess` that blocks public downloads. |
+| `data/` | Only used if you run without MySQL (holds a SQLite file). Its `.htaccess` blocks public downloads. |
 | `uploads/` | Photos uploaded through the CMS + an `.htaccess` that stops anything there being executed. |
 
 `wesley-foundation-admin.html` is an **older, superseded design** kept for reference.
@@ -49,6 +55,36 @@ define('WESLEY_SECRET', 'change-this-to-a-long-random-string');  // <- any long 
   (It can also be changed later inside the CMS, under Settings.)
 - **WESLEY_SECRET** — secures sign-ins. Change it to your own long random text (mash
   the keyboard). Changing it later just signs editors out.
+
+### Database
+
+First create it in your control panel:
+
+1. Open **MySQL Databases** (hPanel: **Databases → Management**).
+2. **Create a database** — call it something like `wesley`. The panel adds your account
+   name as a prefix, so it becomes e.g. `myaccount_wesley`. Note the full name.
+3. **Create a user** with a strong password. Same prefixing applies.
+4. **Add the user to the database** and tick **ALL PRIVILEGES**.
+
+Then paste all four values into `config.php`:
+
+```php
+define('WESLEY_DB_HOST', 'localhost');
+define('WESLEY_DB_PORT', 3306);
+define('WESLEY_DB_NAME', 'myaccount_wesley');   // the FULL name, with the prefix
+define('WESLEY_DB_USER', 'myaccount_wesley');
+define('WESLEY_DB_PASS', 'the password you just set');
+```
+
+The tables are created automatically the first time the site runs — there is no SQL
+file to import.
+
+> Use the full prefixed names. `wesley` on its own will not connect; it must be
+> `myaccount_wesley`. This is the single most common mistake here.
+
+> Leaving `WESLEY_DB_NAME` empty makes the site fall back to a SQLite file in `data/`.
+> That is meant for running the site on a laptop. On real hosting use MySQL, so your
+> content is inside the backups your host already takes.
 
 ### Contact form email
 
@@ -101,21 +137,63 @@ Tips:
 
 ## Step 3 — Permissions
 
-`data/` and `uploads/` must be writable so PHP can create the database and save
-photos. Usually this works out of the box. If saving or uploading fails, in File
-Manager right-click each folder → **Permissions** → set to **755** (or 775).
+`uploads/` must be writable so the CMS can save photos. Usually this works out of the
+box. If uploading fails, in File Manager right-click the folder → **Permissions** →
+set to **755** (or 775). The same applies to `data/` only if you are running without
+MySQL.
+
+---
+
+## Step 3b — Only if the site already had content
+
+Skip this on a fresh install.
+
+If the site was previously running on the SQLite version and you have an existing
+`data/content.db` full of pages and messages, move it into MySQL once:
+
+```bash
+php migrate.php
+```
+
+No SSH? Visit `https://yourdomain.com/migrate.php?key=YOUR_SECRET`, where `YOUR_SECRET`
+is the `WESLEY_SECRET` value from `config.php` — nobody without it can run the script.
+
+It copies content, revisions, messages, settings (including your changed password) and
+photo records across. It refuses to overwrite a MySQL database that already has content
+unless you add `--force` (or `&force=1`).
+
+**Then delete `migrate.php` from the server.**
 
 ---
 
 ## Step 4 — Check it works
 
 1. Visit your domain — the website should appear.
-2. Visit `yourdomain.com/admin` and sign in.
+2. Visit `yourdomain.com/admin` and sign in. **Settings → Storage** should say your
+   content is in the MySQL database.
 3. Go to **Settings → Send a test email**. Check the inbox of
    `odanladi@icfirstchurch.org` **and its spam folder**.
 4. Change something small and press **Publish changes**, then reload the website.
 
 Hand **`ADMIN-PAGE-GUIDE.md`** to whoever will be updating the site day to day.
+
+---
+
+## If the site says the database is unavailable
+
+The site shows *"The website database is unavailable"* when it cannot connect. In order:
+
+1. **Use the full prefixed names.** cPanel creates `myaccount_wesley`, not `wesley`.
+   Both the database name and the username need the prefix.
+2. **Add the user to the database.** Creating a database and creating a user are two
+   separate steps; the third step, adding the user to the database with **ALL
+   PRIVILEGES**, is easy to miss.
+3. **Check the password** for typos — retype it rather than pasting.
+4. **Host** is `localhost` on almost all shared hosting. A few hosts use a separate
+   database server; if yours does, the panel will tell you the hostname.
+
+The exact error is written to your PHP error log (visible in cPanel → **Errors**), and
+deliberately not shown in the browser so your credentials can't leak.
 
 ---
 
@@ -148,10 +226,12 @@ emailed is tagged *not emailed* in the list.
 
 ## Backups
 
-- In the CMS: **History → Download a backup** saves everything as one file.
+- In the CMS: **History → Download a backup** saves all the page content as one file.
 - **History** also keeps the last 30 published versions for one-click restore.
-- From hPanel you can download `data/content.db` (all content and messages) and the
-  `uploads/` folder (all photos) as a raw backup.
+- A full backup is **two things**: an export of the MySQL database (hPanel →
+  phpMyAdmin → Export, or the panel's own backup tool) *and* a copy of the `uploads/`
+  folder. The database holds the pages, messages and photo details; `uploads/` holds
+  the photos themselves. One without the other is not a complete backup.
 
 ---
 
@@ -162,16 +242,17 @@ Public endpoints:
 - `POST api.php {action:"contact", …}` → emails the contact form + stores a copy.
 
 Admin endpoints (all need a token from `action:"login"`): `save`, `messages`,
-`message_read`, `message_delete`, `upload`, `media`, `media_delete`, `revisions`,
-`revision_restore`, `settings`, `settings_save`, `change_password`, `test_email`,
-`stats`.
+`message_read`, `message_delete`, `upload`, `media`, `media_update`, `media_delete`,
+`revisions`, `revision_restore`, `settings`, `settings_save`, `change_password`,
+`test_email`, `stats`.
 
-Content lives as one JSON row in `data/content.db` (SQLite), alongside tables for
-messages, revisions and settings.
+Tables: `content` (the whole page as one JSON row), `revisions`, `messages`,
+`settings`, `media`. All created automatically by `db.php` on first use.
 
 ## Requirements
 
-- PHP 7.4+ with **PDO SQLite** (enabled by default on Hostinger).
+- PHP 7.4+ with **PDO MySQL** (enabled by default on Hostinger and cPanel).
+- A **MySQL / MariaDB database**, created in your control panel.
 - **HTTPS** turned on in hPanel, so passwords and messages are encrypted in transit.
 
 ## Security notes

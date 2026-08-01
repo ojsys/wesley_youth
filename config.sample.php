@@ -3,13 +3,13 @@
    First United Methodist Church & Wesley Foundation — configuration
    ---------------------------------------------------------------------
    THIS IS THE TEMPLATE. Copy it to `config.php`, then fill in sections
-   1 & 2 below:
+   1 to 3 below:
 
        cp config.sample.php config.php
 
-   `config.php` holds your password and is deliberately NOT stored in
-   version control (see .gitignore) — never commit it or paste it
-   anywhere public.
+   `config.php` holds your password and database login, and is
+   deliberately NOT stored in version control (see .gitignore) — never
+   commit it or paste it anywhere public.
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -28,7 +28,26 @@ define('WESLEY_SECRET', 'change-this-to-a-long-random-string');
 
 
 /* ---------------------------------------------------------------------
-   2) CONTACT FORM EMAIL
+   2) DATABASE
+   ---------------------------------------------------------------------
+   Create a MySQL database and user in cPanel (MySQL Databases), tick
+   ALL PRIVILEGES when adding the user to the database, then paste the
+   four values here. cPanel prefixes both names with your account name,
+   e.g. 'myaccount_wesley'.
+
+   Leave WESLEY_DB_NAME empty to use a local SQLite file instead
+   (data/content.db) -- handy for running the site on a laptop, but use
+   MySQL on real hosting so the host's backups include your content.
+   --------------------------------------------------------------------- */
+define('WESLEY_DB_HOST', 'localhost');
+define('WESLEY_DB_PORT', 3306);
+define('WESLEY_DB_NAME', '');          // e.g. 'myaccount_wesley'
+define('WESLEY_DB_USER', '');          // e.g. 'myaccount_wesley'
+define('WESLEY_DB_PASS', '');
+
+
+/* ---------------------------------------------------------------------
+   3) CONTACT FORM EMAIL
    --------------------------------------------------------------------- */
 
 // Where messages from the website contact form are delivered.

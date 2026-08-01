@@ -37,6 +37,7 @@ if (!file_exists(__DIR__ . '/config.php')) {
 }
 
 require __DIR__ . '/config.php';
+require __DIR__ . '/db.php';
 require __DIR__ . '/mailer.php';
 
 function out($obj, $code = 200) {
@@ -46,56 +47,26 @@ function out($obj, $code = 200) {
 }
 
 /* =====================================================================
-   Database
+   Database  (MySQL when configured, SQLite otherwise -- see db.php)
    ===================================================================== */
 function db() {
-    static $pdo = null;
-    if ($pdo) return $pdo;
-
-    $path = WESLEY_DB;
-    $dir  = dirname($path);
-    if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
     try {
-        $pdo = new PDO('sqlite:' . $path);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $pdo->exec('CREATE TABLE IF NOT EXISTS content (
-                        id         INTEGER PRIMARY KEY CHECK (id = 1),
-                        json       TEXT NOT NULL,
-                        updated_at TEXT NOT NULL )');
-        $pdo->exec('CREATE TABLE IF NOT EXISTS revisions (
-                        id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                        json       TEXT NOT NULL,
-                        created_at TEXT NOT NULL,
-                        note       TEXT )');
-        $pdo->exec('CREATE TABLE IF NOT EXISTS messages (
-                        id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                        name       TEXT NOT NULL,
-                        email      TEXT NOT NULL,
-                        subject    TEXT,
-                        body       TEXT NOT NULL,
-                        ip         TEXT,
-                        created_at TEXT NOT NULL,
-                        is_read    INTEGER NOT NULL DEFAULT 0,
-                        delivered  INTEGER NOT NULL DEFAULT 0 )');
-        $pdo->exec('CREATE TABLE IF NOT EXISTS settings (
-                        key   TEXT PRIMARY KEY,
-                        value TEXT NOT NULL )');
-        return $pdo;
+        return wesley_db();
     } catch (Exception $e) {
-        out(['error' => 'database unavailable'], 500);
+        // Never leak credentials or table names to the browser.
+        error_log('Wesley CMS database error: ' . $e->getMessage());
+        out(['error' => 'The website database is unavailable. Check the database settings in config.php.'], 500);
     }
 }
 
 function setting_get($key, $default = null) {
-    $st = db()->prepare('SELECT value FROM settings WHERE key = :k');
+    $st = db()->prepare('SELECT value FROM settings WHERE ' . wesley_q('key') . ' = :k');
     $st->execute([':k' => $key]);
     $v = $st->fetchColumn();
     return $v === false ? $default : $v;
 }
 function setting_set($key, $value) {
-    $st = db()->prepare('INSERT INTO settings (key, value) VALUES (:k, :v)
-                         ON CONFLICT(key) DO UPDATE SET value = :v');
-    $st->execute([':k' => $key, ':v' => (string)$value]);
+    wesley_setting_put(db(), $key, $value);
 }
 
 /* =====================================================================
@@ -260,8 +231,7 @@ if ($method === 'POST' && $action === 'save') {
         $r = $pdo->prepare('INSERT INTO revisions (json, created_at, note) VALUES (:j, :c, :n)');
         $r->execute([':j' => $prev, ':c' => $stamp,
                      ':n' => substr((string)field('note', 'Published update'), 0, 120)]);
-        $pdo->exec('DELETE FROM revisions WHERE id NOT IN
-                    (SELECT id FROM revisions ORDER BY id DESC LIMIT ' . (int)WESLEY_REVISIONS . ')');
+        wesley_trim_revisions($pdo, WESLEY_REVISIONS);
     }
     out(['ok' => true, 'updated_at' => $stamp]);
 }
@@ -307,6 +277,54 @@ function media_files() {
     return glob(upload_dir() . '/*.{jpg,jpeg,png,gif,webp}', GLOB_BRACE) ?: [];
 }
 
+/* Photos live on disk; the database holds a record per photo so captions,
+   alt text and dimensions survive. Files that predate the media table (or
+   that were copied in over FTP) are adopted here rather than ignored, so
+   the library always reflects what is actually in the folder. */
+function media_sync() {
+    $pdo  = db();
+    $rows = $pdo->query('SELECT id, filename FROM media')->fetchAll(PDO::FETCH_ASSOC);
+    $known = [];
+    foreach ($rows as $r) $known[$r['filename']] = $r['id'];
+
+    foreach (media_files() as $path) {
+        $name = basename($path);
+        if (isset($known[$name])) { unset($known[$name]); continue; }
+        $info = @getimagesize($path);
+        $st = $pdo->prepare('INSERT INTO media (filename, mime, width, height, bytes, alt_text, caption, created_at)
+                             VALUES (:f, :m, :w, :h, :b, \'\', \'\', :c)');
+        $st->execute([
+            ':f' => $name,
+            ':m' => $info ? $info['mime'] : 'image/jpeg',
+            ':w' => $info ? $info[0] : 0,
+            ':h' => $info ? $info[1] : 0,
+            ':b' => filesize($path) ?: 0,
+            ':c' => gmdate('Y-m-d\TH:i:s\Z', filemtime($path) ?: time()),
+        ]);
+    }
+
+    // Anything left in $known has a record but no file behind it any more.
+    if ($known) {
+        $in = implode(',', array_map('intval', $known));
+        $pdo->exec("DELETE FROM media WHERE id IN ($in)");
+    }
+}
+
+function media_list() {
+    media_sync();
+    $rows = db()->query('SELECT id, filename, mime, width, height, bytes, alt_text, caption, created_at
+                         FROM media ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rows as &$r) {
+        $r['url']    = WESLEY_UPLOAD_URL . '/' . $r['filename'];
+        $r['name']   = $r['filename'];
+        $r['size']   = (int)$r['bytes'];
+        $r['width']  = (int)$r['width'];
+        $r['height'] = (int)$r['height'];
+        $r['id']     = (int)$r['id'];
+    }
+    return $rows;
+}
+
 if ($method === 'POST' && $action === 'upload') {
     require_auth($token);
     if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
@@ -338,21 +356,36 @@ if ($method === 'POST' && $action === 'upload') {
     }
     @chmod($dir . '/' . $name, 0644);
 
-    out(['ok' => true, 'url' => WESLEY_UPLOAD_URL . '/' . $name, 'name' => $name,
-         'width' => $info[0], 'height' => $info[1], 'size' => $f['size']]);
+    $st = db()->prepare('INSERT INTO media (filename, mime, width, height, bytes, alt_text, caption, created_at)
+                         VALUES (:f, :m, :w, :h, :b, :a, :cap, :c)');
+    $st->execute([
+        ':f' => $name, ':m' => $info['mime'], ':w' => $info[0], ':h' => $info[1],
+        ':b' => $f['size'],
+        ':a' => substr(trim((string)field('alt_text')), 0, 255),
+        ':cap' => substr(trim((string)field('caption')), 0, 255),
+        ':c' => now(),
+    ]);
+
+    out(['ok' => true, 'id' => (int)db()->lastInsertId(),
+         'url' => WESLEY_UPLOAD_URL . '/' . $name, 'name' => $name,
+         'width' => $info[0], 'height' => $info[1], 'size' => $f['size'],
+         'alt_text' => '', 'caption' => '']);
 }
 
 if ($method === 'GET' && $action === 'media') {
     require_auth($token);
-    $items = [];
-    foreach (media_files() as $p) {
-        $items[] = ['name' => basename($p),
-                    'url'  => WESLEY_UPLOAD_URL . '/' . basename($p),
-                    'size' => filesize($p),
-                    'time' => filemtime($p)];
-    }
-    usort($items, function ($a, $b) { return $b['time'] - $a['time']; });
-    out(['media' => $items]);
+    out(['media' => media_list()]);
+}
+
+if ($method === 'POST' && $action === 'media_update') {
+    require_auth($token);
+    $st = db()->prepare('UPDATE media SET alt_text = :a, caption = :c WHERE id = :id');
+    $st->execute([
+        ':a'  => substr(trim((string)field('alt_text')), 0, 255),
+        ':c'  => substr(trim((string)field('caption')), 0, 255),
+        ':id' => (int)field('id', 0),
+    ]);
+    out(['ok' => true]);
 }
 
 if ($method === 'POST' && $action === 'media_delete') {
@@ -361,6 +394,8 @@ if ($method === 'POST' && $action === 'media_delete') {
     if (!preg_match('/^[A-Za-z0-9._\-]+\.(jpg|jpeg|png|gif|webp)$/i', $name)) out(['error' => 'bad name'], 400);
     $p = upload_dir() . '/' . $name;
     if (is_file($p)) @unlink($p);
+    $st = db()->prepare('DELETE FROM media WHERE filename = :f');
+    $st->execute([':f' => $name]);
     out(['ok' => true]);
 }
 
@@ -439,6 +474,7 @@ if ($method === 'GET' && $action === 'stats') {
         'revisions'  => (int)$pdo->query('SELECT COUNT(*) FROM revisions')->fetchColumn(),
         'updated_at' => $pdo->query('SELECT updated_at FROM content WHERE id = 1')->fetchColumn() ?: null,
         'media'      => count(media_files()),
+        'driver'     => wesley_db_driver(),
     ]);
 }
 
