@@ -1,0 +1,30 @@
+# --- Secrets -----------------------------------------------------------
+# Holds the admin password and sign-in secret. Never commit this.
+# Start from config.sample.php instead.
+config.php
+
+# --- Site data ---------------------------------------------------------
+# The SQLite database: page content, contact messages, revisions, settings.
+data/*
+!data/.htaccess
+
+# Photos uploaded through the CMS media library.
+uploads/*
+!uploads/.htaccess
+
+# --- Superseded ---------------------------------------------------------
+# An earlier design of the site, kept on disk for reference only. It is NOT
+# published: it hardcodes an admin password in client-side JavaScript.
+wesley-foundation-admin.html
+
+# --- Local tooling -----------------------------------------------------
+.claude/settings.local.json
+
+# --- OS / editor noise -------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.idea/
+.vscode/
