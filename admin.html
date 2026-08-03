@@ -984,8 +984,10 @@ function scIdentity() {
     return head('Identity &amp; Logo') +
     '<div class="card"><h3><i class="fas fa-fingerprint"></i> Name &amp; logo</h3>' +
         fImage('Logo image', 'brand.logoImage', 'Leave empty to use the built-in cross &amp; flame emblem. A square image works best.') +
-        fRange('Logo size in the top bar', 'brand.navLogoSize', 28, 62,
+        fRange('Logo height in the top bar', 'brand.navLogoSize', 28, 62,
                'How tall the logo is in the bar across the top of the website. The bar is a fixed 70 pixels tall, so 62 is as large as the logo can go — that is the setting to use for a bold, prominent logo.', 'px') +
+        fRange('How wide the logo may run', 'brand.navLogoMaxWidth', 62, 460,
+               'A wide logo — a name written out beside a symbol, say — runs across as much of this width as its own shape needs, at full height. A square logo ignores this and stays square. Turn it up to give a broad logo more room beside the church name.', 'px') +
         fRange('Logo size everywhere else', 'brand.logoScale', 50, 200,
                'The same logo where it appears further down the page — the hero, the impact circle, and the footer.') +
         fText('Full church name', 'brand.titleFull') +

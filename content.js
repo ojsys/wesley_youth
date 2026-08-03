@@ -20,6 +20,7 @@
             favicon: '',            // browser tab icon; falls back to the logo, then the built-in emblem
             navLogoSize: 62,        // height of the logo in the top bar, in pixels
                                     // (the bar is a fixed 70px, so 62 is the ceiling)
+            navLogoMaxWidth: 240,   // how broad a wide logo may run in the top bar
             logoScale: 100,         // size of the logo everywhere else, as a % of normal
             showTitle: true,        // the church name beside the logo, top of the page
             showSubtitle: true,     // the small line under it
@@ -194,7 +195,8 @@
         }
         delete out.brand.navLogoScale;
 
-        out.brand.navLogoSize = num(out.brand.navLogoSize, 62, 28, 62);
+        out.brand.navLogoSize     = num(out.brand.navLogoSize, 62, 28, 62);
+        out.brand.navLogoMaxWidth = num(out.brand.navLogoMaxWidth, 240, 62, 460);
         out.brand.logoScale   = num(out.brand.logoScale, 100, 50, 200);
 
         // Socials used to be four fixed fields. Turn them into the list.

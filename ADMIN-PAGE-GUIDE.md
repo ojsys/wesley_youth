@@ -51,7 +51,7 @@ Tips:
 - **Contact & Socials** — address, phone, the contact form wording, and social links.
 
 **Site-wide**
-- **Identity & Logo** — church name, subtitle, logo, browser tab title and tab icon (favicon), a size slider for the logo in the top bar (28–62px, since the bar itself is a fixed 70px) and another for the rest of the page, and switches to show or hide the name and subtitle beside the logo.
+- **Identity & Logo** — church name, subtitle, logo, browser tab title and tab icon (favicon), a height slider for the logo in the top bar (28–62px, since the bar itself is a fixed 70px), a width slider that lets a wide logo run broader across the brand area, a size slider for the rest of the page, and switches to show or hide the name and subtitle beside the logo.
 - **Menu** — the links across the top of the website.
 - **Footer**
 

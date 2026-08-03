@@ -22,7 +22,8 @@
             --muted: #6E6656;
             --line: rgba(20,18,16,0.12);
             --logo-scale: 1;        /* set from the CMS: brand.logoScale / 100 */
-            --nav-logo-size: 62px;  /* set from the CMS: brand.navLogoSize, capped to fit the bar */
+            --nav-logo-size: 62px;      /* set from the CMS: brand.navLogoSize, capped to fit the bar */
+            --nav-logo-max-width: 240px;/* set from the CMS: brand.navLogoMaxWidth */
             --nav-h: 70px;          /* the fixed height of the top bar */
         }
 
@@ -71,11 +72,13 @@
         }
         .brand { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; color: var(--ink); min-width: 0; }
         .brand .emblem {
-            /* Never taller than the bar allows (70px less 4px of breathing
-               room top and bottom), and never wide enough on a phone to
-               crowd out the menu button. */
-            width: min(var(--nav-logo-size), 62px, 42vw);
-            height: min(var(--nav-logo-size), 62px, 42vw);
+            /* Height is capped by the bar: 70px less 4px of breathing room top
+               and bottom. Width is NOT locked to it — a wide logo lockup gets
+               to run as broad as its own shape needs, up to the limit set in
+               the CMS, instead of being letterboxed into a small square. */
+            height: min(var(--nav-logo-size), 62px);
+            width: auto;
+            max-width: min(var(--nav-logo-max-width), 52vw);
             flex-shrink: 0;
         }
         .brand-text { line-height: 1.08; max-width: 260px; min-width: 0; }
@@ -83,6 +86,7 @@
             /* A long church name must not push the bar past 70px. */
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             font-family: 'Oswald', sans-serif;
@@ -806,6 +810,9 @@
             var navPx = parseFloat(b.navLogoSize);
             if (!isFinite(navPx) || navPx <= 0) navPx = 62;
             root.style.setProperty('--nav-logo-size', Math.round(navPx) + 'px');
+            var navW = parseFloat(b.navLogoMaxWidth);
+            if (!isFinite(navW) || navW <= 0) navW = 240;
+            root.style.setProperty('--nav-logo-max-width', Math.round(navW) + 'px');
             root.style.setProperty('--logo-scale', ratio(b.logoScale));
 
             renderFavicon();
