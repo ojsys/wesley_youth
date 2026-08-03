@@ -17,7 +17,8 @@
     var DEFAULTS = {
         brand: {
             logoImage: '',
-            navLogoScale: 100,      // size of the logo in the top bar, as a % of normal
+            favicon: '',            // browser tab icon; falls back to the logo, then the built-in emblem
+            navLogoSize: 72,        // height of the logo in the top bar, in pixels
             logoScale: 100,         // size of the logo everywhere else, as a % of normal
             showTitle: true,        // the church name beside the logo, top of the page
             showSubtitle: true,     // the small line under it
@@ -176,15 +177,23 @@
             delete out.hero.slides;
         }
 
-        // Logo sizes are percentages; keep them sane whatever was saved. The
-        // top bar has its own, and allows a much bigger logo than the rest.
-        function pct(v, min, max) {
+        // Keep the logo sizes sane whatever was saved.
+        function num(v, fallback, min, max) {
             var n = parseFloat(v);
-            if (!isFinite(n)) n = 100;
+            if (!isFinite(n)) n = fallback;
             return Math.min(max, Math.max(min, Math.round(n)));
         }
-        out.brand.navLogoScale = pct(out.brand.navLogoScale, 50, 500);
-        out.brand.logoScale    = pct(out.brand.logoScale, 50, 200);
+
+        // The top-bar logo was briefly a percentage of a fixed 46px. It is now
+        // a plain pixel height, which is what the CMS slider shows.
+        if (saved && saved.brand && saved.brand.navLogoScale !== undefined &&
+            (!saved.brand.navLogoSize)) {
+            out.brand.navLogoSize = num(46 * parseFloat(saved.brand.navLogoScale) / 100, 72, 28, 220);
+        }
+        delete out.brand.navLogoScale;
+
+        out.brand.navLogoSize = num(out.brand.navLogoSize, 72, 28, 220);
+        out.brand.logoScale   = num(out.brand.logoScale, 100, 50, 200);
 
         // Socials used to be four fixed fields. Turn them into the list.
         if (!saved || !saved.connect || !Array.isArray(saved.connect.socials)) {

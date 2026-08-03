@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Cross and flame emblem">
+    <!-- A simplified version of the site emblem: the ring lettering and rose
+         window of the full logo turn to mush at 16px, so this keeps only the
+         cross and flame, which still read at tab size. -->
+    <circle cx="100" cy="100" r="100" fill="#F2B705"/>
+    <circle cx="100" cy="100" r="97" fill="none" stroke="#141210" stroke-width="4"/>
+    <g transform="translate(100 100) scale(1.32) translate(-100 -100)">
+        <g fill="#141210">
+            <rect x="86" y="52" width="12" height="94" rx="2"/>
+            <rect x="70" y="80" width="44" height="12" rx="2"/>
+            <path d="M104 148 C90 132 104 118 100 100 C108 110 118 104 112 90 C124 100 128 82 118 68 C140 88 138 128 112 138 C124 142 122 150 104 148 Z"/>
+            <path d="M112 132 C104 122 112 112 110 100 C118 108 122 96 118 86 C130 98 128 122 112 132 Z" fill="#F2B705"/>
+        </g>
+    </g>
+</svg>

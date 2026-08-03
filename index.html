@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>First United Methodist Church &amp; Wesley Foundation — Iowa City</title>
+    <!-- The built-in tab icon. If one is set in the CMS, renderBrand() swaps it. -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" id="faviconLink">
+    <link rel="apple-touch-icon" href="favicon.svg" id="faviconTouch">
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -19,7 +22,7 @@
             --muted: #6E6656;
             --line: rgba(20,18,16,0.12);
             --logo-scale: 1;        /* set from the CMS: brand.logoScale / 100 */
-            --nav-logo-scale: 1;    /* set from the CMS: brand.navLogoScale / 100 */
+            --nav-logo-size: 72px;  /* set from the CMS: brand.navLogoSize */
             --nav-h: 76px;          /* measured after each render — the top bar grows with its logo */
         }
 
@@ -65,8 +68,8 @@
         }
         .brand { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; color: var(--ink); min-width: 0; }
         .brand .emblem {
-            width: calc(46px * var(--nav-logo-scale));
-            height: calc(46px * var(--nav-logo-scale));
+            width: var(--nav-logo-size);
+            height: var(--nav-logo-size);
             flex-shrink: 0;
             /* However big it is set, it can never crowd out the menu button. */
             max-width: 42vw;
@@ -752,6 +755,20 @@
             if (!nav) return;
             document.documentElement.style.setProperty('--nav-h', Math.round(nav.offsetHeight) + 'px');
         }
+        /* The tab icon: whatever the CMS was given, else the logo, else the
+           built-in emblem already sitting in the <head>. */
+        function renderFavicon() {
+            var href = data.brand.favicon || data.brand.logoImage || 'favicon.svg';
+            ['faviconLink', 'faviconTouch'].forEach(function (id) {
+                var link = document.getElementById(id);
+                if (!link || link.getAttribute('href') === href) return;
+                link.setAttribute('href', href);
+                // The type only holds for the built-in SVG; an uploaded icon
+                // could be any format, so let the browser work it out.
+                if (href === 'favicon.svg') link.setAttribute('type', 'image/svg+xml');
+                else link.removeAttribute('type');
+            });
+        }
         function emblemMarkup() {
             if (data.brand.logoImage) {
                 return '<img class="emblem" src="' + esc(data.brand.logoImage) + '" alt="' + esc(data.brand.titleFull) + '">';
@@ -776,10 +793,14 @@
             var b = data.brand;
             if (b.browserTitle) document.title = b.browserTitle;
 
-            // The top bar has its own size; one scale covers the rest.
+            // The top bar is sized in plain pixels; one scale covers the rest.
             var root = document.documentElement;
-            root.style.setProperty('--nav-logo-scale', ratio(b.navLogoScale));
-            root.style.setProperty('--logo-scale',     ratio(b.logoScale));
+            var navPx = parseFloat(b.navLogoSize);
+            if (!isFinite(navPx) || navPx <= 0) navPx = 72;
+            root.style.setProperty('--nav-logo-size', Math.round(navPx) + 'px');
+            root.style.setProperty('--logo-scale', ratio(b.logoScale));
+
+            renderFavicon();
 
             var text = '';
             if (b.showTitle    !== false) text += '<strong>' + esc(b.titleFull) + '</strong>';

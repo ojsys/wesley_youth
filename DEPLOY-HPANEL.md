@@ -16,6 +16,7 @@ pages fast — images are served straight by the web server and cached by browse
 | `admin.html` | The **Website Manager** (the CMS). Visit **`/admin`** to sign in. |
 | `.htaccess` | Apache settings — this is what makes `/admin` work. Hidden file; make sure it uploads. |
 | `content.js` | The shared content model used by both pages. Don't edit by hand. |
+| `favicon.svg` | The built-in browser tab icon, used until a different one is set in the CMS. |
 | `api.php` | The backend (content, messages, uploads, revisions). |
 | `db.php` | Talks to the database. Creates the tables on first use. |
 | `mailer.php` | Sends the contact form emails. |
@@ -114,6 +115,7 @@ public_html/
 ├── index.html
 ├── admin.html
 ├── content.js
+├── favicon.svg
 ├── api.php
 ├── mailer.php
 ├── config.php          <- the copy you made and edited in Step 1
