@@ -17,6 +17,9 @@
     var DEFAULTS = {
         brand: {
             logoImage: '',
+            logoScale: 100,         // size of the logo everywhere, as a % of normal
+            showTitle: true,        // the church name beside the logo, top of the page
+            showSubtitle: true,     // the small line under it
             titleFull: 'First United Methodist Church & Wesley Foundation',
             subtitle: 'Campus Ministry · Iowa City',
             browserTitle: 'First United Methodist Church & Wesley Foundation — Iowa City'
@@ -171,6 +174,11 @@
         if (saved && saved.hero && Array.isArray(saved.hero.slides)) {
             delete out.hero.slides;
         }
+
+        // The logo size is a percentage; keep it sane whatever was saved.
+        var scale = parseFloat(out.brand.logoScale);
+        if (!isFinite(scale)) scale = 100;
+        out.brand.logoScale = Math.min(200, Math.max(50, Math.round(scale)));
 
         // Socials used to be four fixed fields. Turn them into the list.
         if (!saved || !saved.connect || !Array.isArray(saved.connect.socials)) {

@@ -17,6 +17,7 @@
    --------------------------------------------------------------------- */
 
 // The password admins type to sign in at /admin.html. CHANGE THIS.
+
 // (You can also change the password later from inside the CMS, under
 //  Settings -> Change password. Once you do, this value is ignored.)
 define('WESLEY_ADMIN_PASSWORD', 'change-this-password');

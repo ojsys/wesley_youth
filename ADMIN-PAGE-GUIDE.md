@@ -51,7 +51,7 @@ Tips:
 - **Contact & Socials** — address, phone, the contact form wording, and social links.
 
 **Site-wide**
-- **Identity & Logo** — church name, subtitle, logo, browser tab title.
+- **Identity & Logo** — church name, subtitle, logo, logo size, browser tab title, and switches to show or hide the name and subtitle beside the logo.
 - **Menu** — the links across the top of the website.
 - **Footer**
 

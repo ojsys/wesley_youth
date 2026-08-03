@@ -983,9 +983,16 @@ function scIdentity() {
     return head('Identity &amp; Logo') +
     '<div class="card"><h3><i class="fas fa-fingerprint"></i> Name &amp; logo</h3>' +
         fImage('Logo image', 'brand.logoImage', 'Leave empty to use the built-in cross &amp; flame emblem. A square image works best.') +
+        fRange('Logo size', 'brand.logoScale', 50, 200,
+               'Makes the logo bigger or smaller everywhere it appears — the top bar, the hero, and the footer. 100% is the normal size.') +
         fText('Full church name', 'brand.titleFull') +
         fText('Subtitle (small line under the name)', 'brand.subtitle') +
         fText('Browser tab title', 'brand.browserTitle', { hint: 'Shown in the browser tab and in Google results.' }) +
+    '</div>' +
+    '<div class="card"><h3><i class="fas fa-eye"></i> What shows beside the logo</h3>' +
+        fCheck('Show the church name at the top of the page', 'brand.showTitle') +
+        fCheck('Show the subtitle at the top of the page', 'brand.showSubtitle') +
+        '<p style="color:var(--muted);font-size:0.85rem;margin-top:0.7rem">Turn both off to show the logo on its own. This only affects the bar across the top — the browser tab title and the big hero heading are set separately.</p>' +
     '</div>';
 }
 

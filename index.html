@@ -18,6 +18,7 @@
             --paper: #FFFDF7;
             --muted: #6E6656;
             --line: rgba(20,18,16,0.12);
+            --logo-scale: 1;        /* set from the CMS: brand.logoScale / 100 */
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -61,7 +62,7 @@
             box-shadow: 0 6px 30px rgba(20,18,16,0.06);
         }
         .brand { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; color: var(--ink); }
-        .brand .emblem { width: 46px; height: 46px; flex-shrink: 0; }
+        .brand .emblem { width: calc(46px * var(--logo-scale)); height: calc(46px * var(--logo-scale)); flex-shrink: 0; }
         .brand-text { line-height: 1.08; max-width: 260px; }
         .brand-text strong {
             display: block;
@@ -160,7 +161,7 @@
             -webkit-mask-image: linear-gradient(to bottom, black, transparent 70%);
         }
         .hero-inner { position: relative; z-index: 3; max-width: 960px; }
-        .hero .emblem { width: 130px; height: 130px; margin: 0 auto 1.6rem; filter: drop-shadow(0 12px 24px rgba(217,154,0,0.35)); animation: pop 0.9s ease both; }
+        .hero .emblem { width: calc(130px * var(--logo-scale)); height: calc(130px * var(--logo-scale)); max-width: 100%; margin: 0 auto 1.6rem; filter: drop-shadow(0 12px 24px rgba(217,154,0,0.35)); animation: pop 0.9s ease both; }
         .kicker {
             display: inline-block;
             font-family: 'Oswald', sans-serif;
@@ -325,7 +326,7 @@
         .impact-card h3 { font-family: 'Oswald', sans-serif; font-weight: 700; text-transform: uppercase; font-size: 1.15rem; letter-spacing: 1px; margin-bottom: 0.7rem; }
         .impact-card p { color: var(--muted); font-size: 0.98rem; }
         .impact-mid { grid-area: mid; display: flex; align-items: center; justify-content: center; padding: 0 0.5rem; }
-        .impact-mid .emblem { width: 150px; height: 150px; filter: drop-shadow(0 14px 26px rgba(217,154,0,0.35)); }
+        .impact-mid .emblem { width: calc(150px * var(--logo-scale)); height: calc(150px * var(--logo-scale)); max-width: 100%; filter: drop-shadow(0 14px 26px rgba(217,154,0,0.35)); }
 
         /* ---------- Gatherings ---------- */
         .gather-section { background: var(--ink); color: var(--cream); }
@@ -442,7 +443,7 @@
 
         /* ---------- Footer ---------- */
         footer { background: var(--ink); color: var(--cream); padding: 4rem 2rem 2rem; text-align: center; }
-        footer .emblem { width: 74px; height: 74px; margin: 0 auto 1.4rem; }
+        footer .emblem { width: calc(74px * var(--logo-scale)); height: calc(74px * var(--logo-scale)); max-width: 100%; margin: 0 auto 1.4rem; }
         .footer-tag { font-family: 'Anton', sans-serif; text-transform: uppercase; font-size: clamp(1.5rem, 4vw, 2.4rem); line-height: 1; margin-bottom: 0.4rem; }
         .footer-tag .gold { color: var(--gold-light); }
         .footer-values { font-family: 'Oswald', sans-serif; font-weight: 600; letter-spacing: 5px; text-transform: uppercase; color: var(--gold-light); font-size: 0.9rem; margin: 1.2rem 0 2rem; }
@@ -746,11 +747,20 @@
         }
 
         function renderBrand() {
-            if (data.brand.browserTitle) document.title = data.brand.browserTitle;
+            var b = data.brand;
+            if (b.browserTitle) document.title = b.browserTitle;
+
+            // One scale drives every logo on the page — nav, hero, impact, footer.
+            var scale = parseFloat(b.logoScale);
+            if (!isFinite(scale) || scale <= 0) scale = 100;
+            document.documentElement.style.setProperty('--logo-scale', (scale / 100).toFixed(3));
+
+            var text = '';
+            if (b.showTitle    !== false) text += '<strong>' + esc(b.titleFull) + '</strong>';
+            if (b.showSubtitle !== false) text += '<span>' + esc(b.subtitle) + '</span>';
             document.getElementById('brandNav').innerHTML =
                 emblemMarkup() +
-                '<span class="brand-text"><strong>' + esc(data.brand.titleFull) + '</strong>' +
-                '<span>' + esc(data.brand.subtitle) + '</span></span>';
+                (text ? '<span class="brand-text">' + text + '</span>' : '');
             document.getElementById('heroEmblem').innerHTML = data.hero.showEmblem === false ? '' : emblemMarkup();
             document.getElementById('footerEmblem').innerHTML = emblemMarkup();
         }
