@@ -18,7 +18,8 @@
         brand: {
             logoImage: '',
             favicon: '',            // browser tab icon; falls back to the logo, then the built-in emblem
-            navLogoSize: 72,        // height of the logo in the top bar, in pixels
+            navLogoSize: 62,        // height of the logo in the top bar, in pixels
+                                    // (the bar is a fixed 70px, so 62 is the ceiling)
             logoScale: 100,         // size of the logo everywhere else, as a % of normal
             showTitle: true,        // the church name beside the logo, top of the page
             showSubtitle: true,     // the small line under it
@@ -185,14 +186,15 @@
         }
 
         // The top-bar logo was briefly a percentage of a fixed 46px. It is now
-        // a plain pixel height, which is what the CMS slider shows.
+        // a plain pixel height, which is what the CMS slider shows. The ceiling
+        // is 62px: the bar itself is a fixed 70px and the logo sits inside it.
         if (saved && saved.brand && saved.brand.navLogoScale !== undefined &&
             (!saved.brand.navLogoSize)) {
-            out.brand.navLogoSize = num(46 * parseFloat(saved.brand.navLogoScale) / 100, 72, 28, 220);
+            out.brand.navLogoSize = num(46 * parseFloat(saved.brand.navLogoScale) / 100, 62, 28, 62);
         }
         delete out.brand.navLogoScale;
 
-        out.brand.navLogoSize = num(out.brand.navLogoSize, 72, 28, 220);
+        out.brand.navLogoSize = num(out.brand.navLogoSize, 62, 28, 62);
         out.brand.logoScale   = num(out.brand.logoScale, 100, 50, 200);
 
         // Socials used to be four fixed fields. Turn them into the list.

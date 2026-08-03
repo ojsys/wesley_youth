@@ -22,8 +22,8 @@
             --muted: #6E6656;
             --line: rgba(20,18,16,0.12);
             --logo-scale: 1;        /* set from the CMS: brand.logoScale / 100 */
-            --nav-logo-size: 72px;  /* set from the CMS: brand.navLogoSize */
-            --nav-h: 76px;          /* measured after each render — the top bar grows with its logo */
+            --nav-logo-size: 62px;  /* set from the CMS: brand.navLogoSize, capped to fit the bar */
+            --nav-h: 70px;          /* the fixed height of the top bar */
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -53,7 +53,10 @@
             position: fixed;
             top: 0; width: 100%;
             z-index: 1000;
-            padding: 0.85rem 2rem;
+            /* The bar is a fixed 70px. The logo is sized to fit inside it
+               rather than the bar growing around the logo. */
+            height: 70px;
+            padding: 0 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -68,15 +71,20 @@
         }
         .brand { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; color: var(--ink); min-width: 0; }
         .brand .emblem {
-            width: var(--nav-logo-size);
-            height: var(--nav-logo-size);
+            /* Never taller than the bar allows (70px less 4px of breathing
+               room top and bottom), and never wide enough on a phone to
+               crowd out the menu button. */
+            width: min(var(--nav-logo-size), 62px, 42vw);
+            height: min(var(--nav-logo-size), 62px, 42vw);
             flex-shrink: 0;
-            /* However big it is set, it can never crowd out the menu button. */
-            max-width: 42vw;
         }
         .brand-text { line-height: 1.08; max-width: 260px; min-width: 0; }
         .brand-text strong {
-            display: block;
+            /* A long church name must not push the bar past 70px. */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
             font-family: 'Oswald', sans-serif;
             font-weight: 700;
             font-size: 0.82rem;
@@ -473,7 +481,7 @@
             .impact-mid { padding-bottom: 0.5rem; }
         }
         @media (max-width: 768px) {
-            nav { padding: 0.7rem 1.2rem; }
+            nav { padding: 0 1.2rem; }
             .nav-links {
                 display: none; position: absolute; top: 100%; left: 0; right: 0;
                 background: rgba(251,246,233,0.98); backdrop-filter: blur(14px);
@@ -796,7 +804,7 @@
             // The top bar is sized in plain pixels; one scale covers the rest.
             var root = document.documentElement;
             var navPx = parseFloat(b.navLogoSize);
-            if (!isFinite(navPx) || navPx <= 0) navPx = 72;
+            if (!isFinite(navPx) || navPx <= 0) navPx = 62;
             root.style.setProperty('--nav-logo-size', Math.round(navPx) + 'px');
             root.style.setProperty('--logo-scale', ratio(b.logoScale));
 
