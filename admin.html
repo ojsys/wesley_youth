@@ -983,8 +983,10 @@ function scIdentity() {
     return head('Identity &amp; Logo') +
     '<div class="card"><h3><i class="fas fa-fingerprint"></i> Name &amp; logo</h3>' +
         fImage('Logo image', 'brand.logoImage', 'Leave empty to use the built-in cross &amp; flame emblem. A square image works best.') +
-        fRange('Logo size', 'brand.logoScale', 50, 200,
-               'Makes the logo bigger or smaller everywhere it appears — the top bar, the hero, and the footer. 100% is the normal size.') +
+        fRange('Logo size in the top bar', 'brand.navLogoScale', 50, 500,
+               'The logo in the bar across the top of the website. 100% is the normal size; drag it up for a big, prominent logo — the bar grows to fit it.') +
+        fRange('Logo size everywhere else', 'brand.logoScale', 50, 200,
+               'The same logo where it appears further down the page — the hero, the impact circle, and the footer.') +
         fText('Full church name', 'brand.titleFull') +
         fText('Subtitle (small line under the name)', 'brand.subtitle') +
         fText('Browser tab title', 'brand.browserTitle', { hint: 'Shown in the browser tab and in Google results.' }) +

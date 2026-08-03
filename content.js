@@ -17,7 +17,8 @@
     var DEFAULTS = {
         brand: {
             logoImage: '',
-            logoScale: 100,         // size of the logo everywhere, as a % of normal
+            navLogoScale: 100,      // size of the logo in the top bar, as a % of normal
+            logoScale: 100,         // size of the logo everywhere else, as a % of normal
             showTitle: true,        // the church name beside the logo, top of the page
             showSubtitle: true,     // the small line under it
             titleFull: 'First United Methodist Church & Wesley Foundation',
@@ -175,10 +176,15 @@
             delete out.hero.slides;
         }
 
-        // The logo size is a percentage; keep it sane whatever was saved.
-        var scale = parseFloat(out.brand.logoScale);
-        if (!isFinite(scale)) scale = 100;
-        out.brand.logoScale = Math.min(200, Math.max(50, Math.round(scale)));
+        // Logo sizes are percentages; keep them sane whatever was saved. The
+        // top bar has its own, and allows a much bigger logo than the rest.
+        function pct(v, min, max) {
+            var n = parseFloat(v);
+            if (!isFinite(n)) n = 100;
+            return Math.min(max, Math.max(min, Math.round(n)));
+        }
+        out.brand.navLogoScale = pct(out.brand.navLogoScale, 50, 500);
+        out.brand.logoScale    = pct(out.brand.logoScale, 50, 200);
 
         // Socials used to be four fixed fields. Turn them into the list.
         if (!saved || !saved.connect || !Array.isArray(saved.connect.socials)) {

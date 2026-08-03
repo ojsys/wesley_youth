@@ -19,10 +19,12 @@
             --muted: #6E6656;
             --line: rgba(20,18,16,0.12);
             --logo-scale: 1;        /* set from the CMS: brand.logoScale / 100 */
+            --nav-logo-scale: 1;    /* set from the CMS: brand.navLogoScale / 100 */
+            --nav-h: 76px;          /* measured after each render — the top bar grows with its logo */
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); }
 
         body {
             font-family: 'Barlow', sans-serif;
@@ -61,9 +63,15 @@
             border-bottom: 1px solid var(--line);
             box-shadow: 0 6px 30px rgba(20,18,16,0.06);
         }
-        .brand { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; color: var(--ink); }
-        .brand .emblem { width: calc(46px * var(--logo-scale)); height: calc(46px * var(--logo-scale)); flex-shrink: 0; }
-        .brand-text { line-height: 1.08; max-width: 260px; }
+        .brand { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; color: var(--ink); min-width: 0; }
+        .brand .emblem {
+            width: calc(46px * var(--nav-logo-scale));
+            height: calc(46px * var(--nav-logo-scale));
+            flex-shrink: 0;
+            /* However big it is set, it can never crowd out the menu button. */
+            max-width: 42vw;
+        }
+        .brand-text { line-height: 1.08; max-width: 260px; min-width: 0; }
         .brand-text strong {
             display: block;
             font-family: 'Oswald', sans-serif;
@@ -137,7 +145,8 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 8rem 1.5rem 0;
+            /* Clears the fixed top bar, however tall its logo makes it. */
+            padding: max(8rem, calc(var(--nav-h) + 2.5rem)) 1.5rem 0;
             background: var(--cream);
             overflow: hidden;
         }
@@ -729,6 +738,20 @@
             var el = document.getElementById(id);
             if (el) el.style.display = visible === false ? 'none' : '';
         }
+        /* A CMS percentage turned into a CSS multiplier. */
+        function ratio(pct) {
+            var n = parseFloat(pct);
+            if (!isFinite(n) || n <= 0) n = 100;
+            return (n / 100).toFixed(3);
+        }
+        /* The top bar is fixed, so the page below has to know how tall it is —
+           and it grows with the logo. Measured rather than calculated so the
+           menu wrapping onto a second line is accounted for too. */
+        function measureNav() {
+            var nav = document.querySelector('nav');
+            if (!nav) return;
+            document.documentElement.style.setProperty('--nav-h', Math.round(nav.offsetHeight) + 'px');
+        }
         function emblemMarkup() {
             if (data.brand.logoImage) {
                 return '<img class="emblem" src="' + esc(data.brand.logoImage) + '" alt="' + esc(data.brand.titleFull) + '">';
@@ -744,16 +767,19 @@
             renderBrand(); renderNav(); renderHero(); renderVM(); renderImpact();
             renderGather(); renderGallery(); renderConnect(); renderFooter();
             reObserve();
+            measureNav();
         }
+        window.addEventListener('resize', measureNav);
+        window.addEventListener('load', measureNav);
 
         function renderBrand() {
             var b = data.brand;
             if (b.browserTitle) document.title = b.browserTitle;
 
-            // One scale drives every logo on the page — nav, hero, impact, footer.
-            var scale = parseFloat(b.logoScale);
-            if (!isFinite(scale) || scale <= 0) scale = 100;
-            document.documentElement.style.setProperty('--logo-scale', (scale / 100).toFixed(3));
+            // The top bar has its own size; one scale covers the rest.
+            var root = document.documentElement;
+            root.style.setProperty('--nav-logo-scale', ratio(b.navLogoScale));
+            root.style.setProperty('--logo-scale',     ratio(b.logoScale));
 
             var text = '';
             if (b.showTitle    !== false) text += '<strong>' + esc(b.titleFull) + '</strong>';
