@@ -12,10 +12,13 @@ pages fast — images are served straight by the web server and cached by browse
 
 | File | What it is |
 |------|-----------|
-| `index.html` | The public website. |
+| `index.html` | The public website — it draws whichever page the address asks for. |
 | `admin.html` | The **Website Manager** (the CMS). Visit **`/admin`** to sign in. |
-| `.htaccess` | Apache settings — this is what makes `/admin` work. Hidden file; make sure it uploads. |
+| `.htaccess` | Apache settings — this is what makes `/admin` and the page addresses work. Hidden file; make sure it uploads. |
+| `blocks.js` | Every kind of section and element the builder offers. Don't edit by hand. |
 | `content.js` | The shared content model used by both pages. Don't edit by hand. |
+| `render.js` | Draws a page. Used by the website and the editor alike. Don't edit by hand. |
+| `theme.css` | How the website looks. |
 | `favicon.svg` | The built-in browser tab icon, used until a different one is set in the CMS. |
 | `api.php` | The backend (content, messages, uploads, revisions). |
 | `db.php` | Talks to the database. Creates the tables on first use. |
@@ -111,12 +114,16 @@ so the structure looks like this:
 
 ```
 public_html/
-├── .htaccess           <- hidden; makes /admin work
+├── .htaccess           <- hidden; makes /admin and your page addresses work
 ├── index.html
 ├── admin.html
+├── blocks.js
 ├── content.js
+├── render.js
+├── theme.css
 ├── favicon.svg
 ├── api.php
+├── db.php
 ├── mailer.php
 ├── config.php          <- the copy you made and edited in Step 1
 ├── data/
@@ -130,8 +137,11 @@ Tips:
 - All the files must sit in the **same folder**.
 - Make sure all three hidden `.htaccess` files came along — turn on "show hidden files"
   in File Manager if you don't see them. They matter: they give you the `/admin`
-  address, and they stop visitors downloading your database or running anything
-  uploaded.
+  address and the addresses of the pages you build, and they stop visitors downloading
+  your database or running anything uploaded.
+- Apache's **mod_rewrite** must be switched on, or every page except the home page will
+  show "404 Not Found". It is on by default on Hostinger and essentially all shared
+  hosting — if pages 404 after uploading, that is the first thing to check.
 - `router.php` is only for running the site on a laptop. You don't need to upload it
   (it does no harm if you do).
 

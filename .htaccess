@@ -18,6 +18,22 @@
 
     # Serve the CMS at /admin without changing the address bar.
     RewriteRule ^admin$ admin.html [L]
+
+    # ---- Pages made in the CMS ----------------------------------------
+    #
+    # Pages have tidy addresses of their own — /about, /events, /give —
+    # but there is no file behind them: index.html looks at the address
+    # and draws the matching page. So anything that is not a real file,
+    # a real folder, or one of the site's own PHP endpoints is handed to
+    # index.html to resolve.
+    #
+    # A page whose slug no longer exists still reaches index.html, which
+    # shows a "page not found" message rather than an Apache error.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !^/(api|db|mailer|migrate|config|router)\.php$ [NC]
+    RewriteCond %{REQUEST_URI} !^/(uploads|data)/ [NC]
+    RewriteRule ^ index.html [L]
 </IfModule>
 
 # ---- Keep private files private ---------------------------------------
