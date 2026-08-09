@@ -852,7 +852,19 @@
     function renderSection(s, ctx, index, total) {
         var def = B.sections[s.type] || {};
         var fn = SEC[s.type];
-        if (!fn) return '';
+        if (!fn) {
+            // A section this copy of the site cannot draw. It is kept in the
+            // saved content untouched; in the editor it is shown as a stub so
+            // it can be seen and removed rather than being invisibly present.
+            return ctx.edit
+                ? '<section class="sec" style="background:var(--cream-2);padding:2rem;"' +
+                  tag(ctx, 'section', s.id) + '>' +
+                  toolbar(ctx, 'section', s.id, 'Unknown section', { icon: 'fa-circle-question' }) +
+                  '<div class="wrap"><div class="ed-empty">This section (&ldquo;' + esc(s.type) +
+                  '&rdquo;) is not something this version of the site knows how to draw. ' +
+                  'It has been left untouched.</div></div></section>'
+                : '';
+        }
         if (!s.show && !ctx.edit) return '';
 
         var st = s.style || {};

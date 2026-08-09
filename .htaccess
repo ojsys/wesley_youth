@@ -33,6 +33,11 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} !^/(api|db|mailer|migrate|config|router)\.php$ [NC]
     RewriteCond %{REQUEST_URI} !^/(uploads|data)/ [NC]
+    # A missing script, stylesheet or image must 404 rather than quietly
+    # receive index.html. Handing back HTML where JavaScript was expected
+    # turns "one file did not upload" into a blank page with a baffling
+    # syntax error, which is a miserable thing to debug.
+    RewriteCond %{REQUEST_URI} !\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|eot|map|json|txt|xml|pdf|zip)$ [NC]
     RewriteRule ^ index.html [L]
 </IfModule>
 

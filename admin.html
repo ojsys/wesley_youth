@@ -2439,6 +2439,23 @@ document.addEventListener('keydown', function (e) {
    Start
    --------------------------------------------------------------------- */
 (function () {
+    // The editor is built on blocks.js and content.js. If a deploy missed one
+    // of them, say which rather than failing in a dozen confusing ways.
+    var missing = [['blocks.js', 'BLOCKS'], ['content.js', 'SITE']]
+        .filter(function (p) { return !window[p[1]]; })
+        .map(function (p) { return p[0]; });
+    if (missing.length) {
+        document.body.innerHTML =
+            '<div style="font-family:system-ui,sans-serif;max-width:640px;margin:12vh auto;padding:2rem;' +
+            'background:#fff;border-radius:16px;line-height:1.6">' +
+            '<h1 style="font-size:1.25rem;margin-bottom:0.6rem">The Website Manager is missing some of its files</h1>' +
+            '<p style="color:#7A7263">These did not load from the server: <strong>' + missing.join(', ') +
+            '</strong>.<br><br>Upload them next to <code>admin.html</code>, along with ' +
+            '<code>render.js</code> and <code>theme.css</code>, then reload.<br><br>' +
+            'Nothing has been lost — your content is in the database.</p></div>';
+        return;
+    }
+
     try { token = localStorage.getItem(TOKEN_KEY); } catch (e) {}
     if (!token) { $('pw').focus(); return; }
     // Check the saved session is still good before showing the editor.

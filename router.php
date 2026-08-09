@@ -32,6 +32,16 @@ if ($path === '/admin' || $path === '/admin.html') {
 $file = __DIR__ . urldecode($requested);
 if ($requested !== '/' && is_file($file)) return false;
 
+// A missing asset must 404 rather than quietly receive index.html: handing
+// back HTML where JavaScript was expected turns "one file did not upload"
+// into a blank page with a baffling syntax error. Matches .htaccess.
+if (preg_match('/\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|eot|map|json|txt|xml|pdf|zip)$/i', $requested)) {
+    http_response_code(404);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Not found: " . $requested . "\n";
+    return true;
+}
+
 // Anything else is the address of a page made in the CMS. index.html
 // reads the address and draws the matching page.
 header('Content-Type: text/html; charset=utf-8');

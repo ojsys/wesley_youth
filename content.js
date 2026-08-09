@@ -171,11 +171,278 @@
         };
     }
 
+    /* ---------------------------------------------------------------
+       The two pages every church site needs beyond the home page.
+
+       They are built here rather than typed into the CMS so that a fresh
+       install and an upgrade from the old one-page site both end up with
+       them, already filled in and ready to be edited like anything else.
+       --------------------------------------------------------------- */
+
+    /* Small builders, so the page definitions below read like the pages
+       they describe rather than like object literals. */
+    function el(type, over) { return B.newElement(type, over); }
+
+    function row(layoutKey, columns, over) {
+        var r = B.newRow(layoutKey);
+        r.columns.forEach(function (c, i) { c.elements = columns[i] || []; });
+        if (over) merge(r, over);
+        return r;
+    }
+
+    /* `name` is what the section is called in the CMS outline — without it
+       a page of blank sections all read "Blank section". */
+    function blocks(name, style, rows) {
+        var s = B.newSection('blocks');
+        s.name = name || '';
+        if (style) merge(s.style, style);
+        s.data.rows = rows;
+        return s;
+    }
+
+    function header(opts) {
+        var s = B.newSection('pagehero');
+        merge(s.data, opts);
+        return s;
+    }
+
+    function aboutPage() {
+        var p = newPage('About', { slug: 'about' });
+
+        p.sections = [
+            header({
+                kicker: 'Who We Are',
+                title: 'About', titleAccent: 'Us',
+                sub: 'A church and a campus ministry sharing one roof in the heart of downtown Iowa City.',
+                height: 'md', align: 'center', crumbs: true
+            }),
+
+            /* The story, beside a photo. */
+            blocks('Our story', { bg: 'cream', padTop: 6, padBottom: 6 }, [
+                row('1-1', [
+                    [
+                        el('heading', { kicker: 'Our Story', text: 'Faith at the heart of',
+                                        accent: 'campus', size: 'lg', align: 'left' }),
+                        el('text', {
+                            html: '<p>First United Methodist Church has been part of downtown Iowa City for ' +
+                                  'generations, and the Wesley Foundation has walked alongside University of ' +
+                                  'Iowa students for just as long. Today we are one community: neighbours and ' +
+                                  'students, lifelong members and people stepping into a church for the very ' +
+                                  'first time.</p>' +
+                                  '<p>We are not interested in pretending. We are interested in grace — the ' +
+                                  'kind that meets you where you actually are, on the week everything is going ' +
+                                  'well and on the week none of it is.</p>'
+                        }),
+                        el('buttons', {
+                            align: 'left',
+                            list: [{ id: B.uid(), text: 'Come and see', link: '/contact',
+                                     style: 'primary', icon: 'fa-arrow-right', newTab: false }]
+                        })
+                    ],
+                    [el('image', {
+                        // A stand-in, in the same spirit as the sample photos
+                        // elsewhere, so the page looks finished from day one.
+                        // Swap it for a real one in the editor.
+                        src: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=1000&h=750&fit=crop',
+                        alt: 'Students and church members together',
+                        ratio: '4/3', radius: 20, shadow: true, lightbox: false
+                    })]
+                ], { valign: 'middle' })
+            ]),
+
+            /* What a first visit is actually like. */
+            blocks('What to expect', { bg: 'paper', padTop: 6, padBottom: 6 }, [
+                row('1', [[
+                    el('heading', { kicker: 'What To Expect', text: 'Your first', accent: 'visit',
+                                    size: 'lg', align: 'center' }),
+                    el('text', {
+                        align: 'center',
+                        html: '<p>No dress code, no sign-up sheet, and nobody will put you on the spot.</p>'
+                    })
+                ]]),
+                row('1-1-1', [
+                    [el('iconbox', {
+                        icon: 'fa-people-group', title: 'Come as you are', shape: 'ring', card: true,
+                        html: '<p>Jeans are fine. Doubts are fine. Arriving late because parking downtown ' +
+                              'is what it is — also fine.</p>'
+                    })],
+                    [el('iconbox', {
+                        icon: 'fa-utensils', title: 'Eat with us', shape: 'ring', card: true,
+                        html: '<p>Dinner on Wednesdays is free and there is always enough. Bring a friend, ' +
+                              'or come on your own and leave with a few.</p>'
+                    })],
+                    [el('iconbox', {
+                        icon: 'fa-comments', title: 'Ask anything', shape: 'ring', card: true,
+                        html: '<p>Hard questions are welcome here. You will not be handed a tidy answer ' +
+                              'and sent on your way.</p>'
+                    })]
+                ], { gap: 28 })
+            ]),
+
+            /* Questions people actually ask before turning up. */
+            blocks('Questions people ask', { bg: 'cream', width: 'mid', padTop: 6, padBottom: 6 }, [
+                row('1', [[
+                    el('heading', { text: 'Questions people', accent: 'ask', size: 'lg', align: 'center' }),
+                    el('accordion', {
+                        openFirst: true,
+                        list: [
+                            { id: B.uid(), title: 'Do I have to be a student?',
+                              html: '<p>Not at all. The Wesley Foundation is our campus ministry, but First ' +
+                                    'UMC is a church for the whole neighbourhood — students, families, ' +
+                                    'staff, and anyone who wants to be here.</p>' },
+                            { id: B.uid(), title: 'What should I wear?',
+                              html: '<p>Whatever you own. You will see everything from suits to hoodies on ' +
+                                    'a Sunday morning, and nobody is counting.</p>' },
+                            { id: B.uid(), title: 'I am not sure what I believe.',
+                              html: '<p>Then you are in good company. Plenty of people here are working ' +
+                                    'things out, and you are not required to have it settled before you ' +
+                                    'walk through the door.</p>' },
+                            { id: B.uid(), title: 'Where do I park?',
+                              html: '<p>There is street parking around the building and several ramps a ' +
+                                    'short walk away. On Sunday mornings downtown parking is usually easy.</p>' },
+                            { id: B.uid(), title: 'Is the building accessible?',
+                              html: '<p>Yes. If there is anything we can do to make your visit easier, ' +
+                                    'please just ask — we would much rather you told us.</p>' }
+                        ]
+                    })
+                ]])
+            ]),
+
+            /* A closing invitation. */
+            blocks('Invitation', { bg: 'ink', padTop: 4, padBottom: 4 }, [
+                row('1', [[
+                    el('heading', { text: 'There is a place for you here',
+                                    size: 'xl', align: 'center', colour: 'cream' }),
+                    el('text', {
+                        align: 'center', colour: 'cream',
+                        html: '<p>Come for dinner on Wednesday, or just send us a message first. ' +
+                              'Either way, we would love to meet you.</p>'
+                    }),
+                    el('buttons', {
+                        align: 'center',
+                        list: [
+                            { id: B.uid(), text: 'Get in touch', link: '/contact',
+                              style: 'primary', icon: 'fa-paper-plane', newTab: false },
+                            { id: B.uid(), text: "See what's on", link: '/#gather',
+                              style: 'light', icon: '', newTab: false }
+                        ]
+                    })
+                ]])
+            ])
+        ];
+
+        p.seo.description = 'First United Methodist Church & Wesley Foundation in Iowa City — a church ' +
+                            'and campus ministry where everyone is welcome, whatever you believe.';
+        return p;
+    }
+
+    function contactPage() {
+        var p = newPage('Contact', { slug: 'contact' });
+
+        p.sections = [
+            header({
+                kicker: 'Say Hello',
+                title: 'Get in', titleAccent: 'touch',
+                sub: 'Questions, prayer requests, or just wondering where the free food is — we would love to hear from you.',
+                height: 'sm', align: 'center', crumbs: true
+            }),
+
+            /* The real contact section: address, phone, socials and the form,
+               all reading from the site-wide contact details. */
+            (function () {
+                var s = B.newSection('connect');
+                merge(s.data, {
+                    label: 'Reach Out',
+                    titleMain: 'Send us a', titleAccent: 'message',
+                    sub: 'We are a small team, so you will get a real person rather than an auto-reply. ' +
+                         'We usually answer within a day or two.',
+                    formTitle: 'Send us a message',
+                    formNote: 'Your details stay with us — no lists, no spam.'
+                });
+                s.style.anchor = 'message';
+                return s;
+            })(),
+
+            /* Where to find us, beside a map. */
+            blocks('Where to find us', { bg: 'cream', padTop: 6, padBottom: 6 }, [
+                row('1', [[
+                    el('heading', { kicker: 'Finding Us', text: 'Where to', accent: 'find us',
+                                    size: 'lg', align: 'center' })
+                ]]),
+                row('1-1', [
+                    [el('map', { query: '', height: 400, radius: 20 })],
+                    [
+                        // No address block here on purpose: the contact section
+                        // above already carries it, and repeating it twice on
+                        // one page just reads as a mistake.
+                        el('heading', { text: 'Getting here', size: 'sm', font: 'heading', align: 'left' }),
+                        el('text', {
+                            html: '<p><strong>Parking.</strong> There is street parking around the building, ' +
+                                  'and several ramps within a short walk. Sunday mornings downtown are ' +
+                                  'usually quiet.</p>' +
+                                  '<p><strong>Accessibility.</strong> The building is accessible. If there is ' +
+                                  'anything that would make your visit easier, please ask — we would rather ' +
+                                  'know.</p>' +
+                                  '<p><strong>Coming by bus.</strong> Several city and Cambus routes stop ' +
+                                  'within a couple of blocks of the church.</p>'
+                        })
+                    ]
+                ], { valign: 'top', gap: 40 })
+            ]),
+
+            /* When things happen. */
+            blocks('When we gather', { bg: 'paper', padTop: 6, padBottom: 6 }, [
+                row('1', [[
+                    el('heading', { text: 'When we', accent: 'gather', size: 'lg', align: 'center' })
+                ]]),
+                row('1', [[
+                    el('cards', {
+                        columns: '3', style: 'light',
+                        list: [
+                            { id: B.uid(), image: '', tag: 'Every Sunday', title: 'Sunday Worship',
+                              text: 'Music, a message, and a community that actually asks how you are doing.',
+                              meta: '8:30 & 10:30 AM', metaIcon: 'fa-clock', btnText: '', btnLink: '#' },
+                            { id: B.uid(), image: '', tag: 'Every Wednesday', title: 'Wednesday Dinner',
+                              text: 'A free meal and honest conversation. Show up hungry.',
+                              meta: '6:30 PM', metaIcon: 'fa-clock', btnText: '', btnLink: '#' },
+                            { id: B.uid(), image: '', tag: 'Weekdays', title: 'Church Office',
+                              text: 'Call or email and someone will get back to you.',
+                              meta: 'Mon–Thu, 9 AM – 3 PM', metaIcon: 'fa-clock', btnText: '', btnLink: '#' }
+                        ]
+                    })
+                ]])
+            ])
+        ];
+
+        p.seo.description = 'Get in touch with First United Methodist Church & Wesley Foundation, ' +
+                            'Iowa City — address, phone, service times and a message form.';
+        return p;
+    }
+
+    /* Home, About and Contact, with the menu wired up to the last two. */
+    function standardPages(homeSections) {
+        var home = newPage('Home', { slug: '', home: true, showInNav: false });
+        home.sections = homeSections;
+        return [home, aboutPage(), contactPage()];
+    }
+
+    /* Point the top menu at a page, unless it already links there. */
+    function addNavLink(nav, page) {
+        if (!nav || !page) return;
+        if (!Array.isArray(nav.links)) nav.links = [];
+        var already = nav.links.some(function (l) {
+            return l && (l.pageId === page.id ||
+                         String(l.href || '').replace(/^\//, '') === page.slug);
+        });
+        if (already) return;
+        nav.links.push({ id: B.uid(), label: page.title, href: '/' + page.slug, pageId: page.id });
+    }
+
     function defaults() {
         var c = clone(SITE_DEFAULTS);
-        var home = newPage('Home', { slug: '', home: true, showInNav: false });
-        home.sections = defaultHomeSections();
-        c.pages = [home];
+        c.pages = standardPages(defaultHomeSections());
+        addNavLink(c.nav, c.pages[1]);
+        addNavLink(c.nav, c.pages[2]);
         return c;
     }
 
@@ -221,9 +488,10 @@
             if (first && first.image) hero.data.bgImage = first.image;
         }
 
-        var home = newPage('Home', { slug: '', home: true, showInNav: false });
-        home.sections = sections;
-        return [home];
+        // The old site was a single page. Upgrading gives it the two pages a
+        // church site is always asked for next, already written, rather than
+        // leaving them to be built from scratch.
+        return standardPages(sections);
     }
 
     /* The address, email, phone and social links used to live inside the
@@ -276,10 +544,7 @@
         var out = merge(clone(def.defaults), e);
         out.type = e.type;
         out.id = e.id || B.uid();
-        // Repeatable lists inside an element.
-        Object.keys(out).forEach(function (k) {
-            if (Array.isArray(out[k])) ensureIds(out[k]);
-        });
+        coerceLists(def.fields, out);        // repeatable lists inside an element
         return out;
     }
 
@@ -315,10 +580,44 @@
         return out;
     }
 
+    /* A field the block library declares as a list must BE a list by the time
+       anything tries to draw it. Saved content picks up odd shapes over the
+       years — a null, an object, a leftover string — and one of them turning
+       into `x.map is not a function` halfway through drawing would take the
+       whole page down with it. */
+    function coerceLists(fieldDefs, data) {
+        (fieldDefs || []).forEach(function (f) {
+            if (f.t === 'group') { coerceLists(f.fields, data); return; }
+            if (!f.k) return;
+
+            if (f.t === 'items') {
+                if (!Array.isArray(data[f.k])) data[f.k] = [];
+                data[f.k] = data[f.k].filter(function (row) {
+                    return row && typeof row === 'object';
+                });
+                ensureIds(data[f.k]);
+                data[f.k].forEach(function (row) { coerceLists(f.item && f.item.fields, row); });
+            } else if (f.t === 'list' && !Array.isArray(data[f.k])) {
+                // "Belong, Grow, Lead" typed into what is now a list.
+                data[f.k] = typeof data[f.k] === 'string'
+                    ? data[f.k].split(',').map(function (v) { return v.trim(); }).filter(Boolean)
+                    : [];
+            }
+        });
+        return data;
+    }
+
     function normaliseSection(s) {
-        if (!s || typeof s !== 'object') return null;
+        if (!s || typeof s !== 'object' || !s.type) return null;
+
         var def = B.sections[s.type];
-        if (!def) return null;                      // a section kind we no longer have
+        if (!def) {
+            // A kind this version does not know about — a section built by a
+            // newer version, say. Keep it exactly as it is so that opening the
+            // site on an older copy and publishing cannot destroy it. The
+            // renderer simply skips anything it cannot draw.
+            return SITE_UNKNOWN(s);
+        }
 
         var out = {
             id: s.id || B.uid(),
@@ -336,13 +635,21 @@
 
         if (s.type === 'blocks') {
             var rows = Array.isArray(out.data.rows) ? out.data.rows : [];
-            out.data.rows = rows.map(normaliseRow);
+            out.data.rows = rows.filter(function (r) { return r && typeof r === 'object'; })
+                                .map(normaliseRow);
             if (!out.data.rows.length) out.data.rows = [B.newRow('1')];
         } else {
-            Object.keys(out.data).forEach(function (k) {
-                if (Array.isArray(out.data[k])) ensureIds(out.data[k]);
-            });
+            coerceLists(def.fields, out.data);
         }
+        return out;
+    }
+
+    /* Sections of a kind we do not recognise are carried through untouched. */
+    function SITE_UNKNOWN(s) {
+        var out = clone(s);
+        out.id = s.id || B.uid();
+        out.show = s.show !== false;
+        out.unknown = true;
         return out;
     }
 
@@ -382,6 +689,10 @@
         } else if (saved.hero || saved.vm || saved.impact || saved.gather ||
                    saved.gallery || saved.connect) {
             out.pages = migrateV1(saved).map(normalisePage);
+            // The menu was saved before those pages existed, so it has to be
+            // told about them. Done once, at the moment of the upgrade.
+            addNavLink(out.nav, out.pages[1]);
+            addNavLink(out.nav, out.pages[2]);
         } else {
             out.pages = defaults().pages;
         }

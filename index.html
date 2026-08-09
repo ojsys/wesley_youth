@@ -90,7 +90,10 @@
         var API = 'api.php';
         var CACHE_KEY = 'fumc_site_cache_v3';
 
-        var data = SITE.normalise(null);
+        // Deliberately not filled in here: building the default content needs
+        // blocks.js, and if that file is missing this line would throw before
+        // init() below ever got the chance to say so. init() sets it.
+        var data = null;
         var currentPage = null;
 
         /* Which page is being asked for? The web server rewrites every
@@ -375,7 +378,41 @@
            LOAD CONTENT — cache first so nothing flashes blank,
            then the authoritative copy from the server.
            ========================================================= */
+        /* Something went so wrong that there is nothing to show. Say so on
+           the page: a blank white screen tells whoever deployed the site
+           nothing, and this is the one moment they most need telling. */
+        function fatal(title, detail) {
+            document.body.innerHTML =
+                '<div style="font-family:system-ui,sans-serif;max-width:640px;margin:12vh auto;padding:2rem;' +
+                'background:#FFFDF7;border:1px solid #E2DCCC;border-radius:16px;color:#201C17;line-height:1.6">' +
+                '<h1 style="font-size:1.25rem;margin-bottom:0.6rem">' + esc(title) + '</h1>' +
+                '<p style="color:#6E6656">' + detail + '</p></div>';
+        }
+
+        /* index.html is only the shell — the site is drawn by three script
+           files and a stylesheet. If a deploy misses one of them (easily done
+           in a File Manager, since they are new files rather than replacements)
+           nothing can render, so name the missing file rather than going
+           blank. */
+        function missingParts() {
+            return [['blocks.js', 'BLOCKS'], ['content.js', 'SITE'], ['render.js', 'RENDER']]
+                .filter(function (p) { return !window[p[1]]; })
+                .map(function (p) { return p[0]; });
+        }
+
         (function init() {
+            var missing = missingParts();
+            if (missing.length) {
+                fatal('The website is missing some of its files',
+                    'These files did not load from the server: <strong>' + esc(missing.join(', ')) +
+                    '</strong>.<br><br>Upload them alongside <code>index.html</code> (together with ' +
+                    '<code>theme.css</code>) and reload. Your content is safe — it lives in the database, ' +
+                    'not in these files.');
+                return;
+            }
+
+            data = SITE.normalise(null);
+
             if (EDIT) {
                 document.body.classList.add('is-editing');
                 RENDER.editRuntime(document, toParent);
@@ -384,24 +421,50 @@
             try {
                 var cached = localStorage.getItem(CACHE_KEY);
                 if (cached && !EDIT) data = SITE.normalise(JSON.parse(cached));
-            } catch (e) {}
-            renderAll();
+            } catch (e) {
+                // A stale or corrupt cache must never be the reason the site
+                // looks broken — drop it and carry on to the server copy.
+                try { localStorage.removeItem(CACHE_KEY); } catch (e2) {}
+                data = SITE.normalise(null);
+            }
+
+            try {
+                renderAll();
+            } catch (e) {
+                fatal('The website could not be drawn', esc(e.message));
+                return;
+            }
 
             if (EDIT) { toParent({ type: 'wesley-ready' }); return; }
 
             fetch(API + '?action=content', { cache: 'no-store' })
                 .then(function (r) { if (!r.ok) throw new Error('no server'); return r.json(); })
                 .then(function (j) {
-                    if (j && j.content) {
-                        data = SITE.normalise(j.content);
-                        try { localStorage.setItem(CACHE_KEY, JSON.stringify(j.content)); } catch (e) {}
-                        renderAll();
-                        // A link to #something on a freshly loaded page only
-                        // works once that part actually exists.
-                        if (location.hash) {
-                            var target = document.querySelector(location.hash);
-                            if (target) target.scrollIntoView();
-                        }
+                    if (!j || !j.content) return;   // a site with nothing saved yet
+                    // Deliberately outside the catch below: if the saved
+                    // content cannot be understood we must NOT quietly leave
+                    // the built-in sample text on screen looking like the real
+                    // site. That is indistinguishable from "all our content
+                    // disappeared", which is the worst thing this page can do.
+                    var next;
+                    try {
+                        next = SITE.normalise(j.content);
+                    } catch (e) {
+                        fatal('The saved content could not be read',
+                            'The website is fine and nothing has been lost — the copy in the database ' +
+                            'could not be understood by this version of the site.<br><br>' +
+                            'Sign in at <a href="/admin">/admin</a> and use <strong>History</strong> to ' +
+                            'restore the previous version.<br><br><code>' + esc(e.message) + '</code>');
+                        return;
+                    }
+                    data = next;
+                    try { localStorage.setItem(CACHE_KEY, JSON.stringify(j.content)); } catch (e) {}
+                    renderAll();
+                    // A link to #something on a freshly loaded page only
+                    // works once that part actually exists.
+                    if (location.hash) {
+                        var target = document.querySelector(location.hash);
+                        if (target) target.scrollIntoView();
                     }
                 })
                 .catch(function () { /* opened as a file or server down: show what we have */ });

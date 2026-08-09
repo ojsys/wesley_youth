@@ -142,6 +142,13 @@ Tips:
 - Apache's **mod_rewrite** must be switched on, or every page except the home page will
   show "404 Not Found". It is on by default on Hostinger and essentially all shared
   hosting — if pages 404 after uploading, that is the first thing to check.
+
+> **Upgrading an existing site?** `blocks.js`, `render.js` and `theme.css` are *new*
+> files, not replacements. A File Manager upload that only overwrites the files already
+> on the server will silently miss them, and the website cannot draw anything without
+> them. If that happens the site now says exactly which file is missing instead of
+> showing a blank page — upload it and reload. **Nothing is ever lost this way:** your
+> content lives in the database, not in these files.
 - `router.php` is only for running the site on a laptop. You don't need to upload it
   (it does no harm if you do).
 

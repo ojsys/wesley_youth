@@ -151,6 +151,16 @@ same order, with the same look. Hidden sections stay hidden, the old hero slides
 first photo becomes the still background, and the address, phone and social links move
 to the site-wide `contact` record. Nothing is lost and nothing has to be re-entered.
 
+The upgrade also adds the two pages a church site is always asked for next — **About**
+(`/about`) and **Contact** (`/contact`) — already written and wired into the menu.
+They are ordinary pages: edit or delete them like any other. They come from
+`aboutPage()` and `contactPage()` in `content.js`, and a fresh install gets them too.
+
+A section whose kind this copy of the site does not recognise is **carried through
+untouched** rather than dropped, so opening the site with an older copy of the code and
+publishing cannot destroy content built by a newer one. The renderer skips what it
+cannot draw; the editor shows it as a stub you can remove.
+
 ### Security
 
 - `config.php` holds the database login and admin password; it is git-ignored, and the

@@ -148,6 +148,12 @@ numbered lists, a quote, and a button to strip formatting.
 
 ## Pages
 
+The site starts with three: **Home**, **About** (`/about`) and **Contact**
+(`/contact`). About and Contact come already written — a story, what to expect on a
+first visit, questions people ask, and on Contact a message form, a map, how to get
+here and the service times. They are ordinary pages: change the wording, swap the
+photo, add sections, or delete them entirely.
+
 **New page** (bottom left) asks for a name and creates the page with a title header
 already on it.
 
@@ -273,6 +279,24 @@ This works wherever you put a **Contact form** element, on any page.
 **History** keeps a copy of the website from every time you publish. Find the version
 from before the mistake and press **Restore this version** — it goes live immediately,
 and your current version is saved first so you can undo the undo.
+
+### "All our content has disappeared!"
+
+It almost certainly has not. Your words and photos live in the database, not in the
+website's files, so a bad upload cannot delete them.
+
+1. **If the website shows a message naming a missing file** — upload that file to the
+   server next to `index.html` and reload. That is the whole fix.
+2. **If the website looks like a stranger's site** (sample text you never wrote), the
+   editor was showing the built-in starter content and it got published over yours.
+   Go to **History**, find the version from just before, and press
+   **Restore this version**.
+3. **If the page is completely blank**, the site is missing `blocks.js`, `render.js` or
+   `theme.css` — three files added when the page builder arrived. Upload them and
+   reload.
+
+Whatever happened, don't press **Publish changes** until the site looks right again —
+publishing is what would replace the good copy.
 
 You can also press **Download a backup** before any big change, and
 **Load a backup file** to bring it back.
