@@ -610,7 +610,12 @@ img.emblem, .logo-img { object-fit: contain; border-radius: 10px; }
 /* =====================================================================
    Rows, columns and elements — the parts a blank section is built from.
    ===================================================================== */
-.row { display: flex; flex-wrap: wrap; position: relative; }
+/* A row is a grid, not a flex line. Grid shares out what is left once the
+   gaps are taken, so "half and half" really is half and half however wide the
+   page is. The ratios arrive as --cols-template (e.g. "1fr 2fr") from the
+   renderer, which lets the phone rule below flatten the row to one column
+   without fighting an inline style. */
+.row { display: grid; grid-template-columns: var(--cols-template, 1fr); position: relative; }
 .col { min-width: 0; position: relative; }
 .col--filled { overflow: hidden; }
 
@@ -840,9 +845,11 @@ img.emblem, .logo-img { object-fit: contain; border-radius: 10px; }
     .vm-card + .vm-card::before { display: none; }
     .connect-grid { grid-template-columns: 1fr; gap: 2.5rem; }
     .impact-grid.radial { grid-template-columns: 1fr; grid-template-areas: "mid" "c1" "c2" "c3" "c4"; }
-    /* Columns stack, so their percentage widths no longer apply. */
-    .col { width: 100% !important; }
-    .row--reverse { flex-direction: column-reverse; }
+    /* Columns stack, so their share of the row no longer applies. */
+    .row { grid-template-columns: 1fr; }
+    /* "Swap the order on phones": the first column drops to the bottom, so a
+       photo that sat on the left ends up under the words it belongs to. */
+    .row--reverse > .col:first-child { order: 99; }
     .grid { grid-template-columns: 1fr; }
     .el--text .rt { column-count: 1 !important; }
     .el-list { grid-template-columns: 1fr; }

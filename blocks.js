@@ -797,15 +797,20 @@
        normal "blocks" section that can then be edited like any other.
        ================================================================= */
     var PRESETS = [
+        /* ---- one column, full width ---- */
         {
-            key: 'text',  label: 'Heading and text', icon: 'fa-align-left', group: 'Build your own',
+            key: 'text',  label: 'Heading and text', icon: 'fa-align-left', group: 'One column',
             build: function () {
                 return row('1', [[el('heading', { text: 'A heading', align: 'center', size: 'lg' }),
                                   el('text', { align: 'center' })]]);
             }
         },
+
+        /* ---- two columns ----
+           Every one of these is a 50/50 row with one element per column, so
+           whatever goes in lines up with what is beside it. */
         {
-            key: 'textimage', label: 'Text beside a photo', icon: 'fa-image', group: 'Build your own',
+            key: 'textimage', label: 'Text, then photo', icon: 'fa-image', group: 'Two columns',
             build: function () {
                 return row('1-1', [
                     [el('heading', { text: 'Tell them about it', size: 'lg' }), el('text', {}),
@@ -815,17 +820,109 @@
             }
         },
         {
-            key: 'features', label: 'Three features', icon: 'fa-icons', group: 'Build your own',
+            key: 'imagetext', label: 'Photo, then text', icon: 'fa-image', group: 'Two columns',
             build: function () {
-                return row('1-1-1', [
-                    [el('iconbox', { icon: 'fa-heart', title: 'The first thing' })],
-                    [el('iconbox', { icon: 'fa-hands-praying', title: 'The second' })],
-                    [el('iconbox', { icon: 'fa-handshake-angle', title: 'The third' })]
-                ]);
+                return row('1-1', [
+                    [el('image', { ratio: '4/3' })],
+                    [el('heading', { text: 'Tell them about it', size: 'lg' }), el('text', {}),
+                     el('buttons', {})]
+                ], { valign: 'middle' });
             }
         },
         {
-            key: 'cta', label: 'Call to action banner', icon: 'fa-bullhorn', group: 'Build your own',
+            key: 'twotext', label: 'Two columns of text', icon: 'fa-align-left', group: 'Two columns',
+            build: function () {
+                return row('1-1', [
+                    [el('heading', { text: 'The first point', size: 'sm', font: 'heading' }), el('text', {})],
+                    [el('heading', { text: 'The second', size: 'sm', font: 'heading' }), el('text', {})]
+                ], { valign: 'top' });
+            }
+        },
+        {
+            key: 'twofeatures', label: 'Two icon boxes', icon: 'fa-icons', group: 'Two columns',
+            build: function () {
+                return row('1-1', [
+                    [el('iconbox', { icon: 'fa-heart', title: 'The first thing', card: true })],
+                    [el('iconbox', { icon: 'fa-hands-praying', title: 'The second', card: true })]
+                ], { valign: 'stretch' });
+            }
+        },
+        {
+            key: 'textform', label: 'Text beside a form', icon: 'fa-envelope-open-text', group: 'Two columns',
+            build: function () {
+                return row('1-1', [
+                    [el('heading', { text: 'Get in touch', size: 'lg' }), el('text', {}),
+                     el('contactinfo', {})],
+                    [el('form', {})]
+                ], { valign: 'top' });
+            }
+        },
+        {
+            key: 'textvideo', label: 'Text beside a video', icon: 'fa-play', group: 'Two columns',
+            build: function () {
+                return row('1-1', [
+                    [el('heading', { text: 'Watch this', size: 'lg' }), el('text', {})],
+                    [el('video', {})]
+                ], { valign: 'middle' });
+            }
+        },
+
+        /* ---- three columns ---- */
+        {
+            key: 'features', label: 'Three icon boxes', icon: 'fa-icons', group: 'Three columns',
+            build: function () {
+                return row('1-1-1', [
+                    [el('iconbox', { icon: 'fa-heart', title: 'The first thing', card: true })],
+                    [el('iconbox', { icon: 'fa-hands-praying', title: 'The second', card: true })],
+                    [el('iconbox', { icon: 'fa-handshake-angle', title: 'The third', card: true })]
+                ], { valign: 'stretch' });
+            }
+        },
+        {
+            key: 'threephotos', label: 'Three photos', icon: 'fa-images', group: 'Three columns',
+            build: function () {
+                return row('1-1-1', [
+                    [el('image', { ratio: '4/3' })],
+                    [el('image', { ratio: '4/3' })],
+                    [el('image', { ratio: '4/3' })]
+                ], { valign: 'stretch' });
+            }
+        },
+        {
+            key: 'threetext', label: 'Three columns of text', icon: 'fa-align-left', group: 'Three columns',
+            build: function () {
+                return row('1-1-1', [
+                    [el('heading', { text: 'First', size: 'sm', font: 'heading' }), el('text', {})],
+                    [el('heading', { text: 'Second', size: 'sm', font: 'heading' }), el('text', {})],
+                    [el('heading', { text: 'Third', size: 'sm', font: 'heading' }), el('text', {})]
+                ], { valign: 'top' });
+            }
+        },
+
+        /* ---- four columns ---- */
+        {
+            key: 'fourfeatures', label: 'Four icon boxes', icon: 'fa-icons', group: 'Four columns',
+            build: function () {
+                return row('1-1-1-1', [
+                    [el('iconbox', { icon: 'fa-heart', title: 'First', card: true })],
+                    [el('iconbox', { icon: 'fa-hands-praying', title: 'Second', card: true })],
+                    [el('iconbox', { icon: 'fa-handshake-angle', title: 'Third', card: true })],
+                    [el('iconbox', { icon: 'fa-seedling', title: 'Fourth', card: true })]
+                ], { gap: 24, valign: 'stretch' });
+            }
+        },
+        {
+            key: 'fourphotos', label: 'Four photos', icon: 'fa-images', group: 'Four columns',
+            build: function () {
+                return row('1-1-1-1', [
+                    [el('image', { ratio: '1' })], [el('image', { ratio: '1' })],
+                    [el('image', { ratio: '1' })], [el('image', { ratio: '1' })]
+                ], { gap: 20, valign: 'stretch' });
+            }
+        },
+
+        {
+            key: 'cta', label: 'Call to action banner', icon: 'fa-bullhorn', group: 'One column',
             style: { bg: 'ink', padTop: 4, padBottom: 4 },
             build: function () {
                 return row('1', [[
@@ -839,7 +936,7 @@
             }
         },
         {
-            key: 'faq', label: 'Questions & answers', icon: 'fa-circle-question', group: 'Build your own',
+            key: 'faq', label: 'Questions & answers', icon: 'fa-circle-question', group: 'One column',
             style: { width: 'mid' },
             build: function () {
                 return row('1', [[el('heading', { text: 'Questions', accent: 'people ask',
@@ -848,7 +945,7 @@
             }
         },
         {
-            key: 'stats', label: 'Numbers strip', icon: 'fa-chart-simple', group: 'Build your own',
+            key: 'stats', label: 'Numbers strip (3 across)', icon: 'fa-chart-simple', group: 'Three columns',
             style: { bg: 'gold', padTop: 3, padBottom: 3 },
             build: function () {
                 return row('1', [[el('stats', {
@@ -862,7 +959,7 @@
             }
         },
         {
-            key: 'team', label: 'People', icon: 'fa-user-group', group: 'Build your own',
+            key: 'team', label: 'People (3 across)', icon: 'fa-user-group', group: 'Three columns',
             build: function () {
                 return row('1', [[
                     el('heading', { text: 'Meet the', accent: 'team', align: 'center', size: 'lg' }),
@@ -878,17 +975,17 @@
             }
         },
         {
-            key: 'quote', label: 'A quote', icon: 'fa-quote-left', group: 'Build your own',
+            key: 'quote', label: 'A quote', icon: 'fa-quote-left', group: 'One column',
             style: { bg: 'paper', width: 'mid' },
             build: function () { return row('1', [[el('quote', {})]]); }
         },
         {
-            key: 'video', label: 'A video', icon: 'fa-play', group: 'Build your own',
+            key: 'video', label: 'A video', icon: 'fa-play', group: 'One column',
             style: { width: 'mid' },
             build: function () { return row('1', [[el('video', {})]]); }
         },
         {
-            key: 'mapform', label: 'Map beside a form', icon: 'fa-map-location-dot', group: 'Build your own',
+            key: 'mapform', label: 'Map beside a form', icon: 'fa-map-location-dot', group: 'Two columns',
             build: function () {
                 return row('1-1', [[el('map', {})], [el('form', {})]], { valign: 'stretch' });
             }

@@ -571,8 +571,14 @@
     /* =================================================================
        Rows and columns — the free-form layout inside a blank section.
        ================================================================= */
+    /* Columns are placed by CSS Grid on the row, not sized here. Percentage
+       widths in a flex row cannot work: 50% + 50% plus the gap between them
+       is wider than the row, and a wrapping flex container answers that by
+       dropping the second column onto its own line — which is how a "text
+       beside a photo" row silently became "text above a photo". Grid divides
+       what is left AFTER the gaps, so the ratios hold at any width. */
     function columnStyle(c) {
-        var s = 'flex:0 0 auto;width:' + numOr(c.width, 100) + '%;';
+        var s = '';
         switch (c.bg) {
             case 'paper':  s += 'background:var(--paper);'; break;
             case 'cream':  s += 'background:var(--cream);'; break;
@@ -604,9 +610,18 @@
     }
 
     function renderRow(r, ctx, index) {
-        var align = r.valign === 'top' ? 'flex-start' : r.valign === 'middle' ? 'center'
-                  : r.valign === 'bottom' ? 'flex-end' : 'stretch';
-        var style = 'gap:' + px(r.gap, 32) + ';align-items:' + align + ';' +
+        var align = r.valign === 'top' ? 'start' : r.valign === 'middle' ? 'center'
+                  : r.valign === 'bottom' ? 'end' : 'stretch';
+
+        /* The column ratios go out as a custom property rather than as
+           grid-template-columns itself, so the stylesheet's phone rule can
+           collapse the row to a single column without having to out-shout an
+           inline style. */
+        var template = (r.columns || []).map(function (c) {
+            return numOr(c.width, 100) + 'fr';
+        }).join(' ') || '1fr';
+
+        var style = '--cols-template:' + template + ';gap:' + px(r.gap, 32) + ';align-items:' + align + ';' +
                     (numOr(r.padTop, 0) ? 'padding-top:' + px(r.padTop, 0) + ';' : '') +
                     (numOr(r.padBottom, 0) ? 'padding-bottom:' + px(r.padBottom, 0) + ';' : '');
         var cols = (r.columns || []).map(function (c, i) { return renderColumn(c, ctx, i); }).join('');
