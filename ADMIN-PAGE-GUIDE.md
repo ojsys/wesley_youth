@@ -285,8 +285,11 @@ and your current version is saved first so you can undo the undo.
 It almost certainly has not. Your words and photos live in the database, not in the
 website's files, so a bad upload cannot delete them.
 
-1. **If the website shows a message naming a missing file** — upload that file to the
-   server next to `index.html` and reload. That is the whole fix.
+1. **If the website shows a message naming a file** — either *"did not load"* or
+   *"an out-of-date copy is being served"* — upload that file to the server next to
+   `index.html`, then reload with **Ctrl+Shift+R** (**Cmd+Shift+R** on a Mac). That is
+   the whole fix. These six travel together and must all be the same age:
+   `index.html`, `admin.html`, `blocks.js`, `content.js`, `render.js`, `theme.css`.
 2. **If the website looks like a stranger's site** (sample text you never wrote), the
    editor was showing the built-in starter content and it got published over yours.
    Go to **History**, find the version from just before, and press

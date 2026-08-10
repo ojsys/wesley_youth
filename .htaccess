@@ -75,3 +75,16 @@ RedirectMatch 404 /\.git
     ExpiresByType image/gif   "access plus 1 month"
     # The site and CMS must always be fresh, so they are left uncached.
 </IfModule>
+
+# ---- The site's own files must never be served stale -------------------
+#
+# index.html, admin.html and the four files they load only work as a
+# matching set. A browser or host cache holding on to one of them after an
+# update produces a half-updated site, which is a genuinely confusing thing
+# to be handed. "no-cache" still allows caching -- it just requires the
+# browser to check with the server first, which costs one cheap 304.
+<FilesMatch "\.(html|js|css)$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-cache, must-revalidate"
+    </IfModule>
+</FilesMatch>

@@ -768,6 +768,7 @@
     }
 
     global.SITE = {
+        apiVersion: 2,          // see the note in blocks.js
         defaults: defaults,
         socialPresets: SOCIAL_PRESETS,
         clone: clone,

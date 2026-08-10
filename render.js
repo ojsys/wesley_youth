@@ -1116,6 +1116,7 @@
         '</g></svg></div>';
 
     global.RENDER = {
+        apiVersion: 2,          // see the note in blocks.js
         page: page,
         nav: nav,
         footer: footer,

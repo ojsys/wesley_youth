@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="favicon.svg" id="faviconTouch">
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="theme.css?v=2">
 </head>
 <body>
 
@@ -75,9 +75,9 @@
         <div class="lightbox-cap"><strong id="lbTitle"></strong><span id="lbDesc"></span></div>
     </div>
 
-    <script src="blocks.js"></script>
-    <script src="content.js"></script>
-    <script src="render.js"></script>
+    <script src="blocks.js?v=2"></script>
+    <script src="content.js?v=2"></script>
+    <script src="render.js?v=2"></script>
     <script>
         /* =========================================================
            This file only DISPLAYS the site. Everything on it is
@@ -390,24 +390,49 @@
         }
 
         /* index.html is only the shell — the site is drawn by three script
-           files and a stylesheet. If a deploy misses one of them (easily done
-           in a File Manager, since they are new files rather than replacements)
-           nothing can render, so name the missing file rather than going
-           blank. */
-        function missingParts() {
-            return [['blocks.js', 'BLOCKS'], ['content.js', 'SITE'], ['render.js', 'RENDER']]
-                .filter(function (p) { return !window[p[1]]; })
-                .map(function (p) { return p[0]; });
+           files and a stylesheet, and they only work as a matching set.
+
+           Two things go wrong when a site is updated by hand, and both used
+           to surface as a blank page or a cryptic "x is not a function":
+             - a NEW file never gets uploaded, because a File Manager upload
+               only replaces the files already there;
+             - an EXISTING file is replaced but the browser or the host keeps
+               serving its cached copy.
+           Each script reports the version it belongs to, so both cases can be
+           named precisely instead of guessed at. */
+        var NEEDS_VERSION = 2;
+
+        function checkParts() {
+            var missing = [], stale = [];
+            [['blocks.js', 'BLOCKS'], ['content.js', 'SITE'], ['render.js', 'RENDER']]
+                .forEach(function (p) {
+                    var mod = window[p[1]];
+                    if (!mod) missing.push(p[0]);
+                    else if (mod.apiVersion !== NEEDS_VERSION) stale.push(p[0]);
+                });
+            return { missing: missing, stale: stale };
         }
 
         (function init() {
-            var missing = missingParts();
-            if (missing.length) {
-                fatal('The website is missing some of its files',
-                    'These files did not load from the server: <strong>' + esc(missing.join(', ')) +
-                    '</strong>.<br><br>Upload them alongside <code>index.html</code> (together with ' +
-                    '<code>theme.css</code>) and reload. Your content is safe — it lives in the database, ' +
-                    'not in these files.');
+            var parts = checkParts();
+            if (parts.missing.length || parts.stale.length) {
+                var lines = [];
+                if (parts.missing.length) {
+                    lines.push('<strong>Did not load at all:</strong> ' + esc(parts.missing.join(', ')) +
+                        ' — these are newer files, so an upload that only replaces what was already ' +
+                        'on the server will skip them.');
+                }
+                if (parts.stale.length) {
+                    lines.push('<strong>An out-of-date copy is being served:</strong> ' +
+                        esc(parts.stale.join(', ')) + ' — upload the current version, then reload with ' +
+                        '<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> ' +
+                        '(<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> on a Mac) to get past the cache.');
+                }
+                fatal('The website’s files do not match',
+                    lines.join('<br><br>') +
+                    '<br><br>Upload <code>index.html</code>, <code>admin.html</code>, <code>blocks.js</code>, ' +
+                    '<code>content.js</code>, <code>render.js</code> and <code>theme.css</code> together — ' +
+                    'they are one set.<br><br>Your content is safe: it lives in the database, not in these files.');
                 return;
             }
 

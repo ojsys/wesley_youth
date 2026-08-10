@@ -569,8 +569,8 @@
 <div class="toast" id="toast"><i class="fas fa-circle-check"></i> <span id="toastMsg"></span></div>
 <input type="file" id="restoreFile" accept="application/json" style="display:none">
 
-<script src="blocks.js"></script>
-<script src="content.js"></script>
+<script src="blocks.js?v=2"></script>
+<script src="content.js?v=2"></script>
 <script>
 /* =====================================================================
    Website Manager — the content management system for the
@@ -2439,19 +2439,27 @@ document.addEventListener('keydown', function (e) {
    Start
    --------------------------------------------------------------------- */
 (function () {
-    // The editor is built on blocks.js and content.js. If a deploy missed one
-    // of them, say which rather than failing in a dozen confusing ways.
-    var missing = [['blocks.js', 'BLOCKS'], ['content.js', 'SITE']]
-        .filter(function (p) { return !window[p[1]]; })
-        .map(function (p) { return p[0]; });
-    if (missing.length) {
+    // The editor is built on blocks.js and content.js, and they only work as a
+    // matching set. Name a missing or out-of-date one rather than failing in a
+    // dozen confusing ways later. (Same check as index.html.)
+    var NEEDS_VERSION = 2;
+    var missing = [], stale = [];
+    [['blocks.js', 'BLOCKS'], ['content.js', 'SITE']].forEach(function (p) {
+        var mod = window[p[1]];
+        if (!mod) missing.push(p[0]);
+        else if (mod.apiVersion !== NEEDS_VERSION) stale.push(p[0]);
+    });
+    if (missing.length || stale.length) {
         document.body.innerHTML =
             '<div style="font-family:system-ui,sans-serif;max-width:640px;margin:12vh auto;padding:2rem;' +
             'background:#fff;border-radius:16px;line-height:1.6">' +
-            '<h1 style="font-size:1.25rem;margin-bottom:0.6rem">The Website Manager is missing some of its files</h1>' +
-            '<p style="color:#7A7263">These did not load from the server: <strong>' + missing.join(', ') +
-            '</strong>.<br><br>Upload them next to <code>admin.html</code>, along with ' +
-            '<code>render.js</code> and <code>theme.css</code>, then reload.<br><br>' +
+            '<h1 style="font-size:1.25rem;margin-bottom:0.6rem">The Website Manager’s files do not match</h1>' +
+            '<p style="color:#7A7263">' +
+            (missing.length ? '<strong>Did not load:</strong> ' + missing.join(', ') + '.<br><br>' : '') +
+            (stale.length ? '<strong>Out of date on the server:</strong> ' + stale.join(', ') +
+                ' — upload the current version and reload with Ctrl+Shift+R (Cmd+Shift+R on a Mac).<br><br>' : '') +
+            'Upload <code>index.html</code>, <code>admin.html</code>, <code>blocks.js</code>, ' +
+            '<code>content.js</code>, <code>render.js</code> and <code>theme.css</code> together.<br><br>' +
             'Nothing has been lost — your content is in the database.</p></div>';
         return;
     }

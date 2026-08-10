@@ -1037,6 +1037,12 @@
     }
 
     global.BLOCKS = {
+        /* Bumped whenever these files have to be deployed together. The page
+           checks that every one of them reports the same number, so a copy
+           left behind by a part-finished upload is named on screen rather
+           than failing later as "x is not a function". */
+        apiVersion: 2,
+
         sections: SECTIONS,
         elements: ELEMENTS,
         presets: PRESETS,

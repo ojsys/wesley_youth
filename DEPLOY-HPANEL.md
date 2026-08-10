@@ -143,12 +143,31 @@ Tips:
   show "404 Not Found". It is on by default on Hostinger and essentially all shared
   hosting — if pages 404 after uploading, that is the first thing to check.
 
-> **Upgrading an existing site?** `blocks.js`, `render.js` and `theme.css` are *new*
-> files, not replacements. A File Manager upload that only overwrites the files already
-> on the server will silently miss them, and the website cannot draw anything without
-> them. If that happens the site now says exactly which file is missing instead of
-> showing a blank page — upload it and reload. **Nothing is ever lost this way:** your
-> content lives in the database, not in these files.
+### Upgrading an existing site — upload these six together
+
+```
+index.html   admin.html   blocks.js   content.js   render.js   theme.css
+```
+
+They are **one matching set**. Two things go wrong if they are uploaded piecemeal:
+
+- `blocks.js`, `render.js` and `theme.css` are *new* files. An upload that only
+  overwrites what is already on the server silently skips them.
+- `index.html`, `admin.html` and `content.js` already exist, so it is easy to assume
+  the old copies are fine. They are not — and a browser may keep serving a cached copy
+  even after you replace it.
+
+Each script now reports which release it belongs to, so a mismatch names the offending
+file on screen — *"An out-of-date copy is being served: content.js"* — instead of
+failing with something like `SITE.pageBySlug is not a function`. After uploading,
+reload with **Ctrl+Shift+R** (**Cmd+Shift+R** on a Mac) to get past the browser cache.
+
+**Nothing is ever lost this way.** Your content lives in the database, not in these
+files. A mismatched upload stops the site drawing; it cannot delete anything.
+
+> For the maintainer: the files carry `apiVersion` and are linked as `blocks.js?v=2`.
+> When you change how they talk to each other, bump both — the `?v=` stops caches
+> serving an old copy, and the version check catches it if one slips through anyway.
 - `router.php` is only for running the site on a laptop. You don't need to upload it
   (it does no harm if you do).
 
