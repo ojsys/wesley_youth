@@ -50,8 +50,12 @@ h1, h2, h3, h4, .display { font-family: 'Oswald', sans-serif; }
 .emblem { display: block; }
 img.emblem, .logo-img { object-fit: contain; border-radius: 10px; }
 
-/* ---------- Nav ---------- */
-nav {
+/* ---------- Nav ----------
+   Scoped to #navbar on purpose. A bare `nav` selector here would also catch
+   the breadcrumb and the footer's page links — both are <nav> landmarks too —
+   and pin them to the top of the window as invisible 70px bars sitting over
+   the real menu, swallowing every click meant for it. */
+#navbar {
     position: fixed;
     top: 0; width: 100%;
     z-index: 1000;
@@ -65,7 +69,7 @@ nav {
     transition: all 0.35s ease;
     border-bottom: 1px solid transparent;
 }
-nav.scrolled {
+#navbar.scrolled {
     background: rgba(251,246,233,0.92);
     backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--line);
@@ -790,8 +794,8 @@ nav.scrolled {
 .el-html img, .el-html iframe, .el-html video { max-width: 100%; }
 
 /* ---------- Footer ---------- */
-footer { background: var(--ink); color: var(--cream); padding: 4rem 2rem 2rem; text-align: center; }
-footer .emblem { width: calc(74px * var(--logo-scale)); height: calc(74px * var(--logo-scale)); max-width: 100%; margin: 0 auto 1.4rem; }
+#siteFooter { background: var(--ink); color: var(--cream); padding: 4rem 2rem 2rem; text-align: center; }
+#siteFooter .emblem { width: calc(74px * var(--logo-scale)); height: calc(74px * var(--logo-scale)); max-width: 100%; margin: 0 auto 1.4rem; }
 .footer-tag { font-family: 'Anton', sans-serif; text-transform: uppercase; font-size: clamp(1.5rem, 4vw, 2.4rem); line-height: 1; margin-bottom: 0.4rem; }
 .footer-tag .gold { color: var(--gold-light); }
 .footer-values { font-family: 'Oswald', sans-serif; font-weight: 600; letter-spacing: 5px; text-transform: uppercase; color: var(--gold-light); font-size: 0.9rem; margin: 1.2rem 0 2rem; }
@@ -822,7 +826,7 @@ footer .emblem { width: calc(74px * var(--logo-scale)); height: calc(74px * var(
     .grid { grid-template-columns: repeat(min(var(--cols, 3), 2), minmax(0, 1fr)); }
 }
 @media (max-width: 768px) {
-    nav { padding: 0 1.2rem; }
+    #navbar { padding: 0 1.2rem; }
     .nav-links {
         display: none; position: absolute; top: 100%; left: 0; right: 0;
         background: rgba(251,246,233,0.98); backdrop-filter: blur(14px);
